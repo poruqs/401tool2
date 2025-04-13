@@ -77,7 +77,7 @@ def show_menu():
             '8': f"Web Saldırı Araçları {R}(Tamamlanmadı){W}",
             '9': f"Instagram Saldırı Araçları {R}(Tamamlanmadı){W}",
             '10': f"Sosyal Medya Bulucu Araçlar {R}(Tamamlanmadı){W}",
-            '11': f"Wi-Fi Jammer/Deauth Araçları {R}{BRIGHT}(YASADIŞI!,Tamamlanmadı){W}",
+            '11': f"Wi-Fi Jammer/Deauth Araçları {R}{BRIGHT}(Tamamlanmadı){W}",
             '12': f"DDoS Saldırı Araçları {R}(YENİ!,BAKIMDA!){W}"
         }
 
