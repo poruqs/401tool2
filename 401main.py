@@ -1,6 +1,9 @@
 import subprocess
 import os
 import sys
+import time # Gerekli modülleri başta import edelim
+import re   # Gerekli modülleri başta import edelim
+
 try:
     from colorama import init, Fore, Style, Back
     # Colorama'yı başlat
@@ -11,7 +14,7 @@ try:
     R = Fore.RED      # Kırmızı
     G = Fore.GREEN    # Yeşil
     Y = Fore.YELLOW   # Sarı
-    B = Fore.BLUE     # Mavi (Kutu için)
+    B = Fore.BLUE     # Mavi
     M = Fore.MAGENTA
     C = Fore.CYAN
     W = Fore.WHITE    # Beyaz/Varsayılan
@@ -21,36 +24,40 @@ except ImportError:
     print("Lütfen 'pip install colorama' komutu ile yükleyin.")
     BRIGHT = DIM = R = G = Y = B = M = C = W = RESET = ""
 
-
-# Banner - Tamamı Kırmızı ve Parlak
+# Banner - Tamamı Parlak Yeşil
 banner = f"""
-{R}{BRIGHT}██╗  ██╗ ██████╗  ██╗{RESET}
-{R}{BRIGHT}██║  ██║██╔═████╗███║{RESET}
-{R}{BRIGHT}███████║██║██╔██║╚██║{RESET}
-{R}{BRIGHT}╚════██║████╔╝██║ ██║{RESET}
-{R}{BRIGHT}     ██║╚██████╔╝ ██║{RESET}
-{R}{BRIGHT}     ╚═╝ ╚═════╝  ╚═╝{RESET}
+{G}{BRIGHT}██╗  ██╗ ██████╗  ██╗   ████████╗ ██████╗   ██████╗  ██╗     {RESET}
+{G}{BRIGHT}██║  ██║██╔═████╗███║   ╚═╗██╔═╝██╔═══██╗ ██╔═══██╗  ██║     {RESET}
+{G}{BRIGHT}███████║██║██╔██║╚██║     ║██║  ██║   ██║ ██║   ██║  ██║     {RESET}
+{G}{BRIGHT}╚════██║████╔╝██║ ██║     ║██║  ██║   ██║ ██║   ██║  ██║     {RESET}
+{G}{BRIGHT}     ██║╚██████╔╝ ██║     ║██║  ██╚═══██║ ██╚═══██║  ██║     {RESET}
+{G}{BRIGHT}     ╚═╝ ╚═════╝  ╚═╝     ╚═╝   ╚██████╔╝  ╚██████╔╝  ███████╗{RESET}
 """
+
+# Renk kodlarını temizleyen fonksiyon (bir kere tanımla)
+def strip_colors(s):
+    """ANSI renk/stil kodlarını string'den temizler."""
+    return re.sub(r'\x1b\[[0-9;]*[mK]', '', s)
 
 def clear_screen():
     """Ekranı temizler."""
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def show_menu():
-    """Daha belirgin numaralar ve mavi kutu ile stilli menü."""
+    """Düzeltilmiş hizalama ile stilli menü."""
     clear_screen()
     print(banner)
 
-    menu_width = 50 # Menü kutusunun genişliği
+    menu_width = 75 # Menü kutusunun genişliği
     title = "ANA MENÜ"
 
-    # İç genişlik (kenarlıklar ve 1 boşluk padding hariç)
-    inner_width = menu_width - 4
+    # İç genişlik (kenarlıklar ve 2 boşluk padding hariç)
+    inner_width = menu_width - 4 # Sol ve sağdaki 1'er boşluk için
 
     # Mavi Üst Kenarlık
     print(f"{B}{BRIGHT}{'╔' + '═' * (menu_width - 2) + '╗'}{RESET}")
-    # Başlık Satırı (Sarı Başlık)
-    print(f"{B}{BRIGHT}║ {Y}{BRIGHT}{title.center(menu_width - 4)} {B}{BRIGHT}║{RESET}")
+    # Başlık Satırı (Kırmızı Başlık)
+    print(f"{B}{BRIGHT}║ {R}{BRIGHT}{title.center(inner_width)} {B}{BRIGHT}║{RESET}")
     # Mavi Ayırıcı Kenarlık
     print(f"{B}{BRIGHT}{'╠' + '═' * (menu_width - 2) + '╣'}{RESET}")
     # Boş Satır
@@ -61,46 +68,47 @@ def show_menu():
         '1': "Call Bomb",
         '2': "SMS Bomb",
         '3': "DoS Saldırısı",
-        '4': f"Netflix Checker {R}(BAKIMDA){W}", # <<< Değişiklik Burada
+        '4': f"Netflix Checker {R}(BAKIMDA){W}", # Renk kodu içeriyor
         '5': "Base64 Decode"
     }
 
     for key, value in menu_items.items():
-        # Numara kısmı (Parlak Sarı)
-        num_part = f"[{key}]"
-        # Metin kısmı (renk kodlarını hesaba katmadan uzunluk hesapla)
-        # Colorama kodlarını temizleyen basit bir fonksiyon (varsa)
-        def strip_colors(s):
-            import re
-            return re.sub(r'\x1b\[[0-9;]*[mK]', '', s)
+        # Numara kısmı (Renkli ve düz metin)
+        num_part_colored = f"{Y}{BRIGHT}[{key}]{W}"
+        num_part_plain = f"[{key}]"
 
-        text_part = value
-        visible_text_part_len = len(strip_colors(text_part)) # Görünen metin uzunluğu
+        # Metin kısmı (Renkli ve düz metin)
+        text_part_colored = value
+        text_part_plain = strip_colors(text_part_colored)
 
-        # Numara ve metin için ayrılan toplam boşluk
-        # Hizalama için formatlama
-        num_str = f"{Y}{BRIGHT}{num_part}{W}" # Numara her zaman aynı renk ve stilde
-        # Metnin yaslanacağı genişlik (görünen uzunluğa göre)
-        text_width = inner_width - len(num_part) - 1 # -1 numara sonrası boşluk için
-        # Metni (renk kodlarıyla birlikte) sola yasla, ama hizalama görünene göre olsun
-        # Bu biraz karmaşık olabilir, basitçe sola yaslayalım, genellikle çalışır
-        value_str = f" {text_part:<{text_width + (len(text_part) - visible_text_part_len)}}" # Renk kodlarının uzunluğunu ekle
+        # Görünen tam öğe metni (numara + boşluk + metin)
+        visible_item_text = f"{num_part_plain} {text_part_plain}"
+        visible_item_length = len(visible_item_text)
 
-        print(f"{B}{BRIGHT}║ {num_str}{value_str} {B}{BRIGHT}║{RESET}")
+        # Gereken boşluk padding'ini hesapla
+        padding_needed = inner_width - visible_item_length
 
+        # Renkli öğeyi oluştur (Numara + Boşluk + Renkli Metin)
+        item_str_colored = f"{num_part_colored} {text_part_colored}"
+
+        # Satırı yazdır: Kenarlık + Boşluk + Renkli Öğe + Hesaplanan Boşluk + Kenarlık
+        # Hesaplanan boşluğun negatif olmadığından emin ol
+        print(f"{B}{BRIGHT}║ {item_str_colored}{' ' * max(0, padding_needed)} {B}{BRIGHT}║{RESET}")
 
     # Boş Satır
     print(f"{B}{BRIGHT}║{' ' * (menu_width - 2)}║{RESET}")
     # Ayırıcı
     print(f"{B}{BRIGHT}╟{'─' * (menu_width - 2)}╢{RESET}")
 
-    # Çıkış Seçeneği
+    # Çıkış Seçeneği (Hizalama düzeltmesi)
     num_part_exit = "[0]"
     text_part_exit = "Çıkış"
-    num_str_exit = f"{R}{BRIGHT}{num_part_exit}{W}" # Çıkış numarası Kırmızı
-    text_width_exit = inner_width - len(num_part_exit) - 1
-    value_str_exit = f" {text_part_exit:<{text_width_exit}}"
-    print(f"{B}{BRIGHT}║ {num_str_exit}{value_str_exit} {B}{BRIGHT}║{RESET}")
+    visible_exit_text = f"{num_part_exit} {text_part_exit}"
+    visible_exit_length = len(visible_exit_text)
+    padding_needed_exit = inner_width - visible_exit_length
+    item_str_exit_colored = f"{R}{BRIGHT}{num_part_exit}{W} {text_part_exit}"
+    print(f"{B}{BRIGHT}║ {item_str_exit_colored}{' ' * max(0, padding_needed_exit)} {B}{BRIGHT}║{RESET}")
+
 
     # Mavi Alt Kenarlık
     print(f"{B}{BRIGHT}{'╚' + '═' * (menu_width - 2) + '╝'}{RESET}")
@@ -116,12 +124,9 @@ def show_menu():
 
 def run_script(script_name):
     """Belirtilen Python betiğini çalıştırır."""
-    # Kullanıcı "BAKIMDA" olan bir seçeneği seçerse uyarı ver
     if script_name == "netflix_checker..py":
          print(f"\n{R}{BRIGHT}UYARI:{Y} Netflix Checker şu anda bakımdadır ve düzgün çalışmayabilir.{RESET}")
-         # İsteğe bağlı olarak burada çalıştırmayı engelleyebilirsiniz:
-         # input(f"{Y}Devam etmek için Enter tuşuna basın veya işlemi iptal etmek için Ctrl+C...{RESET}")
-         time.sleep(2) # Kısa bir bekleme
+         time.sleep(2)
 
     try:
         print(f"\n{C}{BRIGHT}--- '{script_name}' başlatılıyor ---{RESET}\n")
@@ -147,8 +152,6 @@ def run_script(script_name):
 
 # Ana program akışı
 if __name__ == "__main__":
-    import time
-
     while True:
         user_choice = show_menu()
 
@@ -160,7 +163,7 @@ if __name__ == "__main__":
             run_script("DoS.py")
         elif user_choice == '4':
             # Orijinal netflix dosya adı ('netflix_checker..py') kullanılıyor.
-            run_script("netflix_checker.py")
+            run_script("netflix_checker..py")
         elif user_choice == '5':
             run_script("base64decode.py")
         elif user_choice == '0':
