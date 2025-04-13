@@ -22,10 +22,11 @@ def show_menu():
     clear_screen() # Menüyü göstermeden önce ekranı temizle
     print(banner)
     print("Ana Menü\n" + "="*20) # Başlık ve ayırıcı çizgi
-    print("1-) Call Bomb")
-    print("2-) CC Checker")
-    print("3-) Crash")
-    print("4-) SMS Bomb")
+    print("1-) Call Bomb")          # Dosya adı kaldırıldı
+    print("2-) Crash")              # Dosya adı kaldırıldı
+    print("3-) SMS Bomb")           # Dosya adı kaldırıldı
+    print("4-) Base64 Decode")      # Dosya adı kaldırıldı
+    print("5-) Netflix Checker")    # Dosya adı kaldırıldı
     print("\n0-) Çıkış") # Çıkış seçeneği
     print("-" * 20)
 
@@ -56,13 +57,16 @@ if __name__ == "__main__":
 
         # Kullanıcının seçimine göre ilgili betiği çalıştır
         if user_choice == '1':
-            run_script("call_bomb.py")    # 1. seçeneğe karşılık gelen dosya adı
+            run_script("call_bomb.py")
         elif user_choice == '2':
-            run_script("cc_checker.py")   # 2. seçeneğe karşılık gelen dosya adı
+            run_script("crash.py")
         elif user_choice == '3':
-            run_script("crash.py")        # 3. seçeneğe karşılık gelen dosya adı
+            run_script("sms_bomb.py")
         elif user_choice == '4':
-            run_script("sms_bomb.py")     # 4. seçeneğe karşılık gelen dosya adı
+            run_script("base64decode.py")
+        elif user_choice == '5':
+            # Dosya adındaki çift noktaya dikkat!
+            run_script("netflix_checker.py")
         elif user_choice == '0':
             print("\nProgramdan çıkılıyor...")
             break # Döngüyü kır ve programı sonlandır
