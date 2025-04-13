@@ -1,8 +1,8 @@
 import subprocess
 import os
 import sys
-import time # Gerekli modülleri başta import edelim
-import re   # Gerekli modülleri başta import edelim
+import time
+import re
 
 try:
     from colorama import init, Fore, Style, Back
@@ -24,17 +24,18 @@ except ImportError:
     print("Lütfen 'pip install colorama' komutu ile yükleyin.")
     BRIGHT = DIM = R = G = Y = B = M = C = W = RESET = ""
 
-# Banner - Tamamı Parlak Yeşil
+# Banner - Orijinal "401", Tamamı Parlak Yeşil ve Ortalamak için Sol Boşluk Eklendi
+banner_padding = " " * 15 # Banner'ı sağa kaydırmak için boşluk
 banner = f"""
-{G}{BRIGHT}██╗  ██╗ ██████╗  ██╗   ████████╗ ██████╗   ██████╗  ██╗     {RESET}
-{G}{BRIGHT}██║  ██║██╔═████╗███║   ╚═╗██╔═╝██╔═══██╗ ██╔═══██╗  ██║     {RESET}
-{G}{BRIGHT}███████║██║██╔██║╚██║     ║██║  ██║   ██║ ██║   ██║  ██║     {RESET}
-{G}{BRIGHT}╚════██║████╔╝██║ ██║     ║██║  ██║   ██║ ██║   ██║  ██║     {RESET}
-{G}{BRIGHT}     ██║╚██████╔╝ ██║     ║██║  ██╚═══██║ ██╚═══██║  ██║     {RESET}
-{G}{BRIGHT}     ╚═╝ ╚═════╝  ╚═╝     ╚═╝   ╚██████╔╝  ╚██████╔╝  ███████╗{RESET}
+{banner_padding}{G}{BRIGHT}██╗  ██╗ ██████╗  ██╗{RESET}
+{banner_padding}{G}{BRIGHT}██║  ██║██╔═████╗███║{RESET}
+{banner_padding}{G}{BRIGHT}███████║██║██╔██║╚██║{RESET}
+{banner_padding}{G}{BRIGHT}╚════██║████╔╝██║ ██║{RESET}
+{banner_padding}{G}{BRIGHT}     ██║╚██████╔╝ ██║{RESET}
+{banner_padding}{G}{BRIGHT}     ╚═╝ ╚═════╝  ╚═╝{RESET}
 """
 
-# Renk kodlarını temizleyen fonksiyon (bir kere tanımla)
+# Renk kodlarını temizleyen fonksiyon
 def strip_colors(s):
     """ANSI renk/stil kodlarını string'den temizler."""
     return re.sub(r'\x1b\[[0-9;]*[mK]', '', s)
@@ -44,23 +45,23 @@ def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def show_menu():
-    """Düzeltilmiş hizalama ile stilli menü."""
+    """Düzeltilmiş hizalama ve ortalanmış banner ile stilli menü."""
     clear_screen()
-    print(banner)
+    print(banner) # Ortalanmış yeşil "401" banner
 
-    menu_width = 75 # Menü kutusunun genişliği
+    menu_width = 55 # Menü kutusunun genişliği
     title = "ANA MENÜ"
 
-    # İç genişlik (kenarlıklar ve 2 boşluk padding hariç)
-    inner_width = menu_width - 4 # Sol ve sağdaki 1'er boşluk için
+    # İç genişlik (kenarlıklar '║' ve kenarlardaki 1'er boşluk için)
+    inner_width = menu_width - 4
 
-    # Mavi Üst Kenarlık
+    # --- Menü Kutusu Başlangıcı (Mavi) ---
     print(f"{B}{BRIGHT}{'╔' + '═' * (menu_width - 2) + '╗'}{RESET}")
-    # Başlık Satırı (Kırmızı Başlık)
+    # Başlık Satırı (Kırmızı Başlık, kutu içinde ortalı)
     print(f"{B}{BRIGHT}║ {R}{BRIGHT}{title.center(inner_width)} {B}{BRIGHT}║{RESET}")
-    # Mavi Ayırıcı Kenarlık
+    # Ayırıcı Kenarlık
     print(f"{B}{BRIGHT}{'╠' + '═' * (menu_width - 2) + '╣'}{RESET}")
-    # Boş Satır
+    # Boş Satır (Padding)
     print(f"{B}{BRIGHT}║{' ' * (menu_width - 2)}║{RESET}")
 
     # Menü Öğeleri
@@ -72,46 +73,49 @@ def show_menu():
         '5': "Base64 Decode"
     }
 
+    # Menü öğelerini yazdır (Hizalama Mantığı)
     for key, value in menu_items.items():
-        # Numara kısmı (Renkli ve düz metin)
+        # 1. Renkli Numara Kısmı: "[1]" gibi
         num_part_colored = f"{Y}{BRIGHT}[{key}]{W}"
+        # 2. Renksiz Numara Kısmı (uzunluk için): "[1]" gibi
         num_part_plain = f"[{key}]"
 
-        # Metin kısmı (Renkli ve düz metin)
+        # 3. Renkli Metin Kısmı: "Call Bomb" veya "Netflix...(BAKIMDA)" gibi
         text_part_colored = value
+        # 4. Renksiz Metin Kısmı (uzunluk için)
         text_part_plain = strip_colors(text_part_colored)
 
-        # Görünen tam öğe metni (numara + boşluk + metin)
-        visible_item_text = f"{num_part_plain} {text_part_plain}"
-        visible_item_length = len(visible_item_text)
+        # 5. Görünen tam öğe metninin uzunluğu (renksiz): "[1] Call Bomb"
+        visible_item_length = len(num_part_plain) + 1 + len(text_part_plain) # +1 aradaki boşluk için
 
-        # Gereken boşluk padding'ini hesapla
+        # 6. Sağ tarafa eklenecek boşluk sayısı
+        # inner_width: kutu içindeki toplam kullanılabilir karakter sayısı
         padding_needed = inner_width - visible_item_length
 
-        # Renkli öğeyi oluştur (Numara + Boşluk + Renkli Metin)
+        # 7. Yazdırılacak son satır: Renkli Numara + Boşluk + Renkli Metin + Hesaplanan Boşluk
         item_str_colored = f"{num_part_colored} {text_part_colored}"
+        # Negatif boşluk olmamasını sağla
+        final_padding = ' ' * max(0, padding_needed)
 
-        # Satırı yazdır: Kenarlık + Boşluk + Renkli Öğe + Hesaplanan Boşluk + Kenarlık
-        # Hesaplanan boşluğun negatif olmadığından emin ol
-        print(f"{B}{BRIGHT}║ {item_str_colored}{' ' * max(0, padding_needed)} {B}{BRIGHT}║{RESET}")
+        print(f"{B}{BRIGHT}║ {item_str_colored}{final_padding} {B}{BRIGHT}║{RESET}")
 
-    # Boş Satır
+    # Boş Satır (Padding)
     print(f"{B}{BRIGHT}║{' ' * (menu_width - 2)}║{RESET}")
     # Ayırıcı
     print(f"{B}{BRIGHT}╟{'─' * (menu_width - 2)}╢{RESET}")
 
-    # Çıkış Seçeneği (Hizalama düzeltmesi)
+    # Çıkış Seçeneği (Aynı hizalama mantığı ile)
     num_part_exit = "[0]"
     text_part_exit = "Çıkış"
-    visible_exit_text = f"{num_part_exit} {text_part_exit}"
-    visible_exit_length = len(visible_exit_text)
+    visible_exit_length = len(num_part_exit) + 1 + len(text_part_exit)
     padding_needed_exit = inner_width - visible_exit_length
     item_str_exit_colored = f"{R}{BRIGHT}{num_part_exit}{W} {text_part_exit}"
-    print(f"{B}{BRIGHT}║ {item_str_exit_colored}{' ' * max(0, padding_needed_exit)} {B}{BRIGHT}║{RESET}")
-
+    final_padding_exit = ' ' * max(0, padding_needed_exit)
+    print(f"{B}{BRIGHT}║ {item_str_exit_colored}{final_padding_exit} {B}{BRIGHT}║{RESET}")
 
     # Mavi Alt Kenarlık
     print(f"{B}{BRIGHT}{'╚' + '═' * (menu_width - 2) + '╝'}{RESET}")
+    # --- Menü Kutusu Sonu ---
 
     # Seçim istemi (Yeşil)
     try:
@@ -171,5 +175,3 @@ if __name__ == "__main__":
             time.sleep(0.5)
             break
         else:
-            print(f"\n{R}{BRIGHT}Geçersiz seçim! Lütfen menüdeki numaralardan birini girin.{RESET}")
-            time.sleep(1.5)
