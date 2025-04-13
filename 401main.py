@@ -3,34 +3,32 @@ import os
 import sys
 try:
     from colorama import init, Fore, Style, Back
-    # Colorama'yı başlat (Windows'ta renkleri etkinleştirir ve otomatik sıfırlar)
+    # Colorama'yı başlat
     init(autoreset=True)
-    # Renkleri tanımla (daha kolay kullanım için)
+    # Renkleri ve Stilleri tanımla
     BRIGHT = Style.BRIGHT
     DIM = Style.DIM
-    R = Fore.RED
-    G = Fore.GREEN
-    Y = Fore.YELLOW
-    B = Fore.BLUE
+    R = Fore.RED      # Kırmızı
+    G = Fore.GREEN    # Yeşil
+    Y = Fore.YELLOW   # Sarı
+    B = Fore.BLUE     # Mavi (Kutu için)
     M = Fore.MAGENTA
     C = Fore.CYAN
-    W = Fore.WHITE
-    RESET = Style.RESET_ALL # init(autoreset=True) olsa da bazen gerekebilir
+    W = Fore.WHITE    # Beyaz/Varsayılan
+    RESET = Style.RESET_ALL
 except ImportError:
     print("Uyarı: Renkli arayüz için 'colorama' kütüphanesi gerekli.")
     print("Lütfen 'pip install colorama' komutu ile yükleyin.")
-    # Colorama yoksa renkleri boş string yap
     BRIGHT = DIM = R = G = Y = B = M = C = W = RESET = ""
 
 
-# Banner (İsteğe bağlı olarak renklendirilebilir)
-# Farklı renklerde deneme yapabilirsiniz
+# Banner - Tamamı Kırmızı ve Parlak
 banner = f"""
-{C}{BRIGHT}██╗  ██╗ ██████╗  ██╗{RESET}
-{M}{BRIGHT}██║  ██║██╔═████╗███║{RESET}
-{Y}{BRIGHT}███████║██║██╔██║╚██║{RESET}
-{G}{BRIGHT}╚════██║████╔╝██║ ██║{RESET}
-{B}{BRIGHT}     ██║╚██████╔╝ ██║{RESET}
+{R}{BRIGHT}██╗  ██╗ ██████╗  ██╗{RESET}
+{R}{BRIGHT}██║  ██║██╔═████╗███║{RESET}
+{R}{BRIGHT}███████║██║██╔██║╚██║{RESET}
+{R}{BRIGHT}╚════██║████╔╝██║ ██║{RESET}
+{R}{BRIGHT}     ██║╚██████╔╝ ██║{RESET}
 {R}{BRIGHT}     ╚═╝ ╚═════╝  ╚═╝{RESET}
 """
 
@@ -39,54 +37,75 @@ def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def show_menu():
-    """Stilli ve renkli menüyü gösterir."""
+    """Daha belirgin numaralar ve mavi kutu ile stilli menü."""
     clear_screen()
     print(banner)
 
     menu_width = 50 # Menü kutusunun genişliği
     title = "ANA MENÜ"
 
-    # Üst Kenarlık
-    print(f"{M}{BRIGHT}{'╔' + '═' * (menu_width - 2) + '╗'}{RESET}")
-    # Başlık Satırı
-    print(f"{M}{BRIGHT}║{Y}{BRIGHT}{title.center(menu_width - 2)}{M}{BRIGHT}║{RESET}")
-    # Ayırıcı Kenarlık
-    print(f"{M}{BRIGHT}{'╠' + '═' * (menu_width - 2) + '╣'}{RESET}")
+    # İç genişlik (kenarlıklar ve 1 boşluk padding hariç)
+    inner_width = menu_width - 4
+
+    # Mavi Üst Kenarlık
+    print(f"{B}{BRIGHT}{'╔' + '═' * (menu_width - 2) + '╗'}{RESET}")
+    # Başlık Satırı (Sarı Başlık)
+    print(f"{B}{BRIGHT}║ {Y}{BRIGHT}{title.center(menu_width - 4)} {B}{BRIGHT}║{RESET}")
+    # Mavi Ayırıcı Kenarlık
+    print(f"{B}{BRIGHT}{'╠' + '═' * (menu_width - 2) + '╣'}{RESET}")
     # Boş Satır
-    print(f"{M}{BRIGHT}║{' ' * (menu_width - 2)}║{RESET}")
+    print(f"{B}{BRIGHT}║{' ' * (menu_width - 2)}║{RESET}")
 
     # Menü Öğeleri
     menu_items = {
         '1': "Call Bomb",
         '2': "SMS Bomb",
         '3': "DoS Saldırısı",
-        '4': "Netflix Checker",
+        '4': f"Netflix Checker {R}(BAKIMDA){W}", # <<< Değişiklik Burada
         '5': "Base64 Decode"
     }
 
     for key, value in menu_items.items():
-        # Öğeyi formatla: "[No] İsim" şeklinde ve ortalanmış boşluklarla
-        item_text = f" [{key}] {value} "
-        padding_total = menu_width - 2 - len(item_text)
-        padding_left = padding_total // 2
-        padding_right = padding_total - padding_left
-        print(f"{M}{BRIGHT}║{' ' * padding_left}{Y}[{key}]{W} {value}{' ' * padding_right}║{RESET}")
+        # Numara kısmı (Parlak Sarı)
+        num_part = f"[{key}]"
+        # Metin kısmı (renk kodlarını hesaba katmadan uzunluk hesapla)
+        # Colorama kodlarını temizleyen basit bir fonksiyon (varsa)
+        def strip_colors(s):
+            import re
+            return re.sub(r'\x1b\[[0-9;]*[mK]', '', s)
+
+        text_part = value
+        visible_text_part_len = len(strip_colors(text_part)) # Görünen metin uzunluğu
+
+        # Numara ve metin için ayrılan toplam boşluk
+        # Hizalama için formatlama
+        num_str = f"{Y}{BRIGHT}{num_part}{W}" # Numara her zaman aynı renk ve stilde
+        # Metnin yaslanacağı genişlik (görünen uzunluğa göre)
+        text_width = inner_width - len(num_part) - 1 # -1 numara sonrası boşluk için
+        # Metni (renk kodlarıyla birlikte) sola yasla, ama hizalama görünene göre olsun
+        # Bu biraz karmaşık olabilir, basitçe sola yaslayalım, genellikle çalışır
+        value_str = f" {text_part:<{text_width + (len(text_part) - visible_text_part_len)}}" # Renk kodlarının uzunluğunu ekle
+
+        print(f"{B}{BRIGHT}║ {num_str}{value_str} {B}{BRIGHT}║{RESET}")
+
 
     # Boş Satır
-    print(f"{M}{BRIGHT}║{' ' * (menu_width - 2)}║{RESET}")
+    print(f"{B}{BRIGHT}║{' ' * (menu_width - 2)}║{RESET}")
     # Ayırıcı
-    print(f"{M}{BRIGHT}╟{'─' * (menu_width - 2)}╢{RESET}")
+    print(f"{B}{BRIGHT}╟{'─' * (menu_width - 2)}╢{RESET}")
+
     # Çıkış Seçeneği
-    exit_text = f" [0] Çıkış "
-    padding_total = menu_width - 2 - len(exit_text)
-    padding_left = padding_total // 2
-    padding_right = padding_total - padding_left
-    print(f"{M}{BRIGHT}║{' ' * padding_left}{R}[0]{W} Çıkış{' ' * padding_right}║{RESET}")
+    num_part_exit = "[0]"
+    text_part_exit = "Çıkış"
+    num_str_exit = f"{R}{BRIGHT}{num_part_exit}{W}" # Çıkış numarası Kırmızı
+    text_width_exit = inner_width - len(num_part_exit) - 1
+    value_str_exit = f" {text_part_exit:<{text_width_exit}}"
+    print(f"{B}{BRIGHT}║ {num_str_exit}{value_str_exit} {B}{BRIGHT}║{RESET}")
 
-    # Alt Kenarlık
-    print(f"{M}{BRIGHT}{'╚' + '═' * (menu_width - 2) + '╝'}{RESET}")
+    # Mavi Alt Kenarlık
+    print(f"{B}{BRIGHT}{'╚' + '═' * (menu_width - 2) + '╝'}{RESET}")
 
-    # Seçim istemi
+    # Seçim istemi (Yeşil)
     try:
         choice = input(f"\n{G}{BRIGHT}>> Seçiminizi girin:{W} ")
         return choice
@@ -97,14 +116,18 @@ def show_menu():
 
 def run_script(script_name):
     """Belirtilen Python betiğini çalıştırır."""
+    # Kullanıcı "BAKIMDA" olan bir seçeneği seçerse uyarı ver
+    if script_name == "netflix_checker..py":
+         print(f"\n{R}{BRIGHT}UYARI:{Y} Netflix Checker şu anda bakımdadır ve düzgün çalışmayabilir.{RESET}")
+         # İsteğe bağlı olarak burada çalıştırmayı engelleyebilirsiniz:
+         # input(f"{Y}Devam etmek için Enter tuşuna basın veya işlemi iptal etmek için Ctrl+C...{RESET}")
+         time.sleep(2) # Kısa bir bekleme
+
     try:
-        # Betik başlamadan önce bir mesaj göster
         print(f"\n{C}{BRIGHT}--- '{script_name}' başlatılıyor ---{RESET}\n")
-        time.sleep(0.5) # Kısa bir bekleme
+        time.sleep(0.5)
         python_executable = sys.executable
-        # Betiği çalıştır
         subprocess.run([python_executable, script_name], check=True)
-        # Betik bittikten sonra mesaj
         print(f"\n{G}{BRIGHT}--- '{script_name}' başarıyla tamamlandı ---{RESET}")
     except FileNotFoundError:
         print(f"\n{R}{BRIGHT}HATA: '{script_name}' dosyası bulunamadı!{RESET}")
@@ -115,32 +138,29 @@ def run_script(script_name):
     except Exception as e:
         print(f"\n{R}{BRIGHT}Beklenmedik bir hata oluştu: {e}{RESET}")
 
-    # Devam etmek için bekle
     print(f"\n{Y}Devam etmek için Enter tuşuna basın...{RESET}")
     try:
-        input() # Sadece Enter beklenir
+        input()
     except KeyboardInterrupt:
         print("\n\nÇıkış yapılıyor...")
         sys.exit()
 
 # Ana program akışı
 if __name__ == "__main__":
-    import time # run_script içinde kullanıldı, buraya da alalım
+    import time
 
     while True:
         user_choice = show_menu()
 
-        # Seçime göre betiği çalıştır
         if user_choice == '1':
             run_script("call_bomb.py")
         elif user_choice == '2':
             run_script("sms_bomb.py")
         elif user_choice == '3':
-            run_script("DoS.py") # crash.py'nin yeni adı
+            run_script("DoS.py")
         elif user_choice == '4':
             # Orijinal netflix dosya adı ('netflix_checker..py') kullanılıyor.
-            # Eğer 'netflix_checker.py' olarak değiştirdiyseniz, aşağıdaki satırı güncelleyin.
-            run_script("netflix_checker..py")
+            run_script("netflix_checker.py")
         elif user_choice == '5':
             run_script("base64decode.py")
         elif user_choice == '0':
@@ -149,4 +169,4 @@ if __name__ == "__main__":
             break
         else:
             print(f"\n{R}{BRIGHT}Geçersiz seçim! Lütfen menüdeki numaralardan birini girin.{RESET}")
-            time.sleep(1.5) # Hata mesajını görmek için bekle
+            time.sleep(1.5)
