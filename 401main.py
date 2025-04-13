@@ -4,28 +4,33 @@ import sys
 import time
 import re
 
+# Colorama import ve fallback mekanizması
 try:
     from colorama import init, Fore, Style, Back
-    # Colorama'yı başlat
-    init(autoreset=True)
-    # Renkleri ve Stilleri tanımla
+    init(autoreset=True) # Renkleri otomatik sıfırla
     BRIGHT = Style.BRIGHT
     DIM = Style.DIM
-    R = Fore.RED      # Kırmızı
-    G = Fore.GREEN    # Yeşil
-    Y = Fore.YELLOW   # Sarı
-    B = Fore.BLUE     # Mavi
+    R = Fore.RED
+    G = Fore.GREEN
+    Y = Fore.YELLOW
+    B = Fore.BLUE
     M = Fore.MAGENTA
     C = Fore.CYAN
-    W = Fore.WHITE    # Beyaz/Varsayılan
-    RESET = Style.RESET_ALL
+    W = Fore.WHITE
+    RESET = Style.RESET_ALL # Gerekirse diye dursun
 except ImportError:
     print("Uyarı: Renkli arayüz için 'colorama' kütüphanesi gerekli.")
     print("Lütfen 'pip install colorama' komutu ile yükleyin.")
+    # Colorama yoksa, tüm renk/stil değişkenlerini boş string yap
     BRIGHT = DIM = R = G = Y = B = M = C = W = RESET = ""
+    # class tanımları da Attribute hatası vermesin diye ekleyelim
+    class Style: BRIGHT = ""; DIM = ""; RESET_ALL = ""
+    class Fore: RED = ""; GREEN = ""; YELLOW = ""; BLUE = ""; MAGENTA = ""; CYAN = ""; WHITE = ""
+    class Back: pass
+
 
 # Banner - Orijinal "401", Tamamı Parlak Yeşil ve Ortalamak için Sol Boşluk Eklendi
-banner_padding = " " * 15 # Banner'ı sağa kaydırmak için boşluk
+banner_padding = " " * 15
 banner = f"""
 {banner_padding}{G}{BRIGHT}██╗  ██╗ ██████╗  ██╗{RESET}
 {banner_padding}{G}{BRIGHT}██║  ██║██╔═████╗███║{RESET}
@@ -38,96 +43,86 @@ banner = f"""
 # Renk kodlarını temizleyen fonksiyon
 def strip_colors(s):
     """ANSI renk/stil kodlarını string'den temizler."""
-    return re.sub(r'\x1b\[[0-9;]*[mK]', '', s)
+    return re.sub(r'\x1b\[[0-9;]*[mK]', '', str(s))
 
 def clear_screen():
     """Ekranı temizler."""
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def show_menu():
-    """Düzeltilmiş hizalama ve ortalanmış banner ile stilli menü."""
+    """Hata ayıklaması yapılmış hizalama ile stilli menü."""
     clear_screen()
-    print(banner) # Ortalanmış yeşil "401" banner
+    print(banner)
 
-    menu_width = 55 # Menü kutusunun genişliği
+    menu_width = 55
     title = "ANA MENÜ"
+    inner_width = menu_width - 4 # ║ İçerik ║ için kullanılabilir alan
 
-    # İç genişlik (kenarlıklar '║' ve kenarlardaki 1'er boşluk için)
-    inner_width = menu_width - 4
+    try:
+        # --- Menü Kutusu Başlangıcı (Mavi) ---
+        print(f"{B}{BRIGHT}{'╔' + '═' * (menu_width - 2) + '╗'}{RESET}")
+        print(f"{B}{BRIGHT}║ {R}{BRIGHT}{title.center(inner_width)} {B}{BRIGHT}║{RESET}") # Kırmızı Başlık
+        print(f"{B}{BRIGHT}{'╠' + '═' * (menu_width - 2) + '╣'}{RESET}")
+        print(f"{B}{BRIGHT}║{' ' * (menu_width - 2)}║{RESET}") # Boşluk
 
-    # --- Menü Kutusu Başlangıcı (Mavi) ---
-    print(f"{B}{BRIGHT}{'╔' + '═' * (menu_width - 2) + '╗'}{RESET}")
-    # Başlık Satırı (Kırmızı Başlık, kutu içinde ortalı)
-    print(f"{B}{BRIGHT}║ {R}{BRIGHT}{title.center(inner_width)} {B}{BRIGHT}║{RESET}")
-    # Ayırıcı Kenarlık
-    print(f"{B}{BRIGHT}{'╠' + '═' * (menu_width - 2) + '╣'}{RESET}")
-    # Boş Satır (Padding)
-    print(f"{B}{BRIGHT}║{' ' * (menu_width - 2)}║{RESET}")
+        menu_items = {
+            '1': "Call Bomb",
+            '2': "SMS Bomb",
+            '3': "DoS Saldırısı",
+            '4': f"Netflix Checker {R}(BAKIMDA){W}",
+            '5': "Base64 Decode"
+        }
 
-    # Menü Öğeleri
-    menu_items = {
-        '1': "Call Bomb",
-        '2': "SMS Bomb",
-        '3': "DoS Saldırısı",
-        '4': f"Netflix Checker {R}(BAKIMDA){W}", # Renk kodu içeriyor
-        '5': "Base64 Decode"
-    }
+        for key, value in menu_items.items():
+            num_part_colored = f"{Y}{BRIGHT}[{key}]{W}"
+            num_part_plain = f"[{key}]"
+            text_part_colored = value
+            text_part_plain = strip_colors(text_part_colored)
+            visible_item_length = len(num_part_plain) + 1 + len(text_part_plain)
+            padding_needed = inner_width - visible_item_length
+            item_str_colored = f"{num_part_colored} {text_part_colored}"
+            final_padding = ' ' * max(0, padding_needed)
+            print(f"{B}{BRIGHT}║ {item_str_colored}{final_padding} {B}{BRIGHT}║{RESET}")
 
-    # Menü öğelerini yazdır (Hizalama Mantığı)
-    for key, value in menu_items.items():
-        # 1. Renkli Numara Kısmı: "[1]" gibi
-        num_part_colored = f"{Y}{BRIGHT}[{key}]{W}"
-        # 2. Renksiz Numara Kısmı (uzunluk için): "[1]" gibi
-        num_part_plain = f"[{key}]"
+        # Boş Satır ve Ayırıcı
+        print(f"{B}{BRIGHT}║{' ' * (menu_width - 2)}║{RESET}")
+        print(f"{B}{BRIGHT}╟{'─' * (menu_width - 2)}╢{RESET}")
 
-        # 3. Renkli Metin Kısmı: "Call Bomb" veya "Netflix...(BAKIMDA)" gibi
-        text_part_colored = value
-        # 4. Renksiz Metin Kısmı (uzunluk için)
-        text_part_plain = strip_colors(text_part_colored)
+        # Çıkış Seçeneği
+        num_part_exit = "[0]"
+        text_part_exit = "Çıkış"
+        visible_exit_length = len(num_part_exit) + 1 + len(text_part_exit)
+        padding_needed_exit = inner_width - visible_exit_length
+        item_str_exit_colored = f"{R}{BRIGHT}{num_part_exit}{W} {text_part_exit}"
+        final_padding_exit = ' ' * max(0, padding_needed_exit)
+        print(f"{B}{BRIGHT}║ {item_str_exit_colored}{final_padding_exit} {B}{BRIGHT}║{RESET}")
 
-        # 5. Görünen tam öğe metninin uzunluğu (renksiz): "[1] Call Bomb"
-        visible_item_length = len(num_part_plain) + 1 + len(text_part_plain) # +1 aradaki boşluk için
+        # Alt Kenarlık
+        print(f"{B}{BRIGHT}{'╚' + '═' * (menu_width - 2) + '╝'}{RESET}")
+        # --- Menü Kutusu Sonu ---
 
-        # 6. Sağ tarafa eklenecek boşluk sayısı
-        # inner_width: kutu içindeki toplam kullanılabilir karakter sayısı
-        padding_needed = inner_width - visible_item_length
+    except Exception as e:
+        print(f"\n{R}MENÜ ÇİZİM HATASI:{RESET} {e}")
+        return None # Hata durumunda None döndür
 
-        # 7. Yazdırılacak son satır: Renkli Numara + Boşluk + Renkli Metin + Hesaplanan Boşluk
-        item_str_colored = f"{num_part_colored} {text_part_colored}"
-        # Negatif boşluk olmamasını sağla
-        final_padding = ' ' * max(0, padding_needed)
-
-        print(f"{B}{BRIGHT}║ {item_str_colored}{final_padding} {B}{BRIGHT}║{RESET}")
-
-    # Boş Satır (Padding)
-    print(f"{B}{BRIGHT}║{' ' * (menu_width - 2)}║{RESET}")
-    # Ayırıcı
-    print(f"{B}{BRIGHT}╟{'─' * (menu_width - 2)}╢{RESET}")
-
-    # Çıkış Seçeneği (Aynı hizalama mantığı ile)
-    num_part_exit = "[0]"
-    text_part_exit = "Çıkış"
-    visible_exit_length = len(num_part_exit) + 1 + len(text_part_exit)
-    padding_needed_exit = inner_width - visible_exit_length
-    item_str_exit_colored = f"{R}{BRIGHT}{num_part_exit}{W} {text_part_exit}"
-    final_padding_exit = ' ' * max(0, padding_needed_exit)
-    print(f"{B}{BRIGHT}║ {item_str_exit_colored}{final_padding_exit} {B}{BRIGHT}║{RESET}")
-
-    # Mavi Alt Kenarlık
-    print(f"{B}{BRIGHT}{'╚' + '═' * (menu_width - 2) + '╝'}{RESET}")
-    # --- Menü Kutusu Sonu ---
-
-    # Seçim istemi (Yeşil)
+    # Seçim istemi
     try:
         choice = input(f"\n{G}{BRIGHT}>> Seçiminizi girin:{W} ")
         return choice
     except KeyboardInterrupt:
         print("\n\nÇıkış yapılıyor...")
         sys.exit()
-
+    except Exception as e:
+        print(f"\n{R}GİRİŞ HATASI:{RESET} {e}")
+        return None
 
 def run_script(script_name):
     """Belirtilen Python betiğini çalıştırır."""
+    if not script_name:
+        print(f"{R}Çalıştırılacak betik adı alınamadı.{RESET}")
+        time.sleep(2)
+        return
+
     if script_name == "netflix_checker..py":
          print(f"\n{R}{BRIGHT}UYARI:{Y} Netflix Checker şu anda bakımdadır ve düzgün çalışmayabilir.{RESET}")
          time.sleep(2)
@@ -136,7 +131,7 @@ def run_script(script_name):
         print(f"\n{C}{BRIGHT}--- '{script_name}' başlatılıyor ---{RESET}\n")
         time.sleep(0.5)
         python_executable = sys.executable
-        subprocess.run([python_executable, script_name], check=True)
+        subprocess.run([python_executable, script_name], check=True, text=True, capture_output=False)
         print(f"\n{G}{BRIGHT}--- '{script_name}' başarıyla tamamlandı ---{RESET}")
     except FileNotFoundError:
         print(f"\n{R}{BRIGHT}HATA: '{script_name}' dosyası bulunamadı!{RESET}")
@@ -159,19 +154,32 @@ if __name__ == "__main__":
     while True:
         user_choice = show_menu()
 
-        if user_choice == '1':
-            run_script("call_bomb.py")
-        elif user_choice == '2':
-            run_script("sms_bomb.py")
-        elif user_choice == '3':
-            run_script("DoS.py")
-        elif user_choice == '4':
-            # Orijinal netflix dosya adı ('netflix_checker..py') kullanılıyor.
-            run_script("netflix_checker..py")
-        elif user_choice == '5':
-            run_script("base64decode.py")
-        elif user_choice == '0':
-            print(f"\n{B}{BRIGHT}Programdan çıkılıyor...{RESET}")
-            time.sleep(0.5)
+        if user_choice is None:
+            print(f"{R}Menü gösterilirken bir hata oluştu, program sonlandırılıyor.{RESET}")
+            time.sleep(3)
             break
+
+        script_to_run = None
+        if user_choice == '1':
+            script_to_run = "call_bomb.py"
+        elif user_choice == '2':
+            script_to_run = "sms_bomb.py"
+        elif user_choice == '3':
+            script_to_run = "DoS.py"
+        elif user_choice == '4':
+            script_to_run = "netflix_checker..py"
+        elif user_choice == '5':
+            script_to_run = "base64decode.py"
+        elif user_choice == '0':
+            # Düzeltilmiş Satır:
+            print(f"\n{B}{BRIGHT}Programdan çıkılıyor...{RESET}") # <<< } eklendi
+            time.sleep(0.5)
+            break # Döngüden çık
         else:
+            print(f"\n{R}{BRIGHT}Geçersiz seçim! Lütfen menüdeki numaralardan birini girin.{RESET}")
+            time.sleep(1.5)
+            continue # Geçersiz seçimse run_script'e gitme, döngüye baştan başla
+
+        # Sadece geçerli bir seçim yapıldıysa ve çıkış seçilmediyse run_script'i çağır
+        if script_to_run:
+             run_script(script_to_run)
