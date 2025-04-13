@@ -17,20 +17,18 @@ try:
     M = Fore.MAGENTA
     C = Fore.CYAN
     W = Fore.WHITE
-    RESET = Style.RESET_ALL # Gerekirse diye dursun
+    RESET = Style.RESET_ALL
 except ImportError:
     print("Uyarı: Renkli arayüz için 'colorama' kütüphanesi gerekli.")
     print("Lütfen 'pip install colorama' komutu ile yükleyin.")
-    # Colorama yoksa, tüm renk/stil değişkenlerini boş string yap
     BRIGHT = DIM = R = G = Y = B = M = C = W = RESET = ""
-    # class tanımları da Attribute hatası vermesin diye ekleyelim
     class Style: BRIGHT = ""; DIM = ""; RESET_ALL = ""
     class Fore: RED = ""; GREEN = ""; YELLOW = ""; BLUE = ""; MAGENTA = ""; CYAN = ""; WHITE = ""
     class Back: pass
 
 
-# Banner - Orijinal "401", Tamamı Parlak Yeşil ve Ortalamak için Sol Boşluk Eklendi
-banner_padding = " " * 15
+# Banner - Orijinal "401", Parlak Yeşil ve Daha Az Sol Boşluk
+banner_padding = " " * 12 # <<< Sol boşluk azaltıldı
 banner = f"""
 {banner_padding}{G}{BRIGHT}██╗  ██╗ ██████╗  ██╗{RESET}
 {banner_padding}{G}{BRIGHT}██║  ██║██╔═████╗███║{RESET}
@@ -50,13 +48,13 @@ def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def show_menu():
-    """Hata ayıklaması yapılmış hizalama ile stilli menü."""
+    """Daha küçük menü kutusu ile stilli menü."""
     clear_screen()
     print(banner)
 
-    menu_width = 55
+    menu_width = 45 # <<< Menü kutusunun genişliği küçültüldü
     title = "ANA MENÜ"
-    inner_width = menu_width - 4 # ║ İçerik ║ için kullanılabilir alan
+    inner_width = menu_width - 4 # İç genişlik yeniden hesaplandı
 
     try:
         # --- Menü Kutusu Başlangıcı (Mavi) ---
@@ -82,6 +80,13 @@ def show_menu():
             padding_needed = inner_width - visible_item_length
             item_str_colored = f"{num_part_colored} {text_part_colored}"
             final_padding = ' ' * max(0, padding_needed)
+
+            # Eğer metin ve padding kutuya sığmıyorsa metni kısaltabiliriz (opsiyonel)
+            # Örneğin: max_text_len = inner_width - len(num_part_plain) - 1
+            # if len(item_str_colored) + len(final_padding) > inner_width:
+            #    # Kısaltma mantığı eklenebilir, şimdilik basit bırakalım
+            #    pass
+
             print(f"{B}{BRIGHT}║ {item_str_colored}{final_padding} {B}{BRIGHT}║{RESET}")
 
         # Boş Satır ve Ayırıcı
@@ -103,7 +108,7 @@ def show_menu():
 
     except Exception as e:
         print(f"\n{R}MENÜ ÇİZİM HATASI:{RESET} {e}")
-        return None # Hata durumunda None döndür
+        return None
 
     # Seçim istemi
     try:
@@ -171,15 +176,14 @@ if __name__ == "__main__":
         elif user_choice == '5':
             script_to_run = "base64decode.py"
         elif user_choice == '0':
-            # Düzeltilmiş Satır:
-            print(f"\n{B}{BRIGHT}Programdan çıkılıyor...{RESET}") # <<< } eklendi
+            print(f"\n{B}{BRIGHT}Programdan çıkılıyor...{RESET}")
             time.sleep(0.5)
             break # Döngüden çık
         else:
             print(f"\n{R}{BRIGHT}Geçersiz seçim! Lütfen menüdeki numaralardan birini girin.{RESET}")
             time.sleep(1.5)
-            continue # Geçersiz seçimse run_script'e gitme, döngüye baştan başla
+            continue # Geçersiz seçimse run_script'e gitme
 
-        # Sadece geçerli bir seçim yapıldıysa ve çıkış seçilmediyse run_script'i çağır
+        # Sadece geçerli bir seçim yapıldıysa run_script'i çağır
         if script_to_run:
              run_script(script_to_run)

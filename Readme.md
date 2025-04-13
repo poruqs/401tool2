@@ -1,5 +1,4 @@
 # 401 Multi-Tool Suite
-
 <pre>
 ██╗  ██╗ ██████╗  ██╗
 ██║  ██║██╔═████╗███║
@@ -24,6 +23,20 @@ Bu araç koleksiyonu **yalnızca eğitim ve yasal test amaçlı** olarak tasarla
 
 **Bu araçları indirerek ve kullanarak yukarıdaki şartları kabul etmiş sayılırsınız.**
 
+---
+
+## ✨ DİKKAT: ANA MENÜ İÇİN COLORAMA GEREKLİ ✨
+
+**!!! COLORAMA ANA MENÜNÜN ÇALIŞMASI İÇİN YÜKLENMELİ !!!**
+
+Eğer `colorama` kurulu değilse,program başlangıçta bir uyarı verecektir.yüklemeniz gerekmektedir.
+
+### Colorama Kurma
+
+`colorama` kütüphanesini aşağıdaki yöntemlerden biriyle kolayca kurabilirsiniz:
+
+        pip install colorama
+        ```
 ---
 
 ## Tool Araçları ve Özellikleri
@@ -52,9 +65,7 @@ Bu araç koleksiyonu **yalnızca eğitim ve yasal test amaçlı** olarak tasarla
 ## Gereksinimler
 
 * **Python:** Sürüm 3.7 veya üstü önerilir.
-* **Google Chrome:** Netflix Checker aracı için gereklidir.
-* **ChromeDriver:** Netflix Checker için gereklidir. Kullandığınız Google Chrome sürümüyle uyumlu olmalı ve sisteminizin `PATH` değişkenine eklenmiş olmalı veya betiklerin bulunduğu dizinde yer almalıdır. [ChromeDriver İndirme](https://chromedriver.chromium.org/downloads)
-
+* **Google Chrome:** Netflix Checker aracı için gereklidir. (netflix checker bakımda)
 ---
 
 ## Kurulum
