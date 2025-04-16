@@ -5,10 +5,19 @@ import webbrowser
 import subprocess
 import time
 import re
-# Bu betik için json, socket, ipaddress gerekmiyor gibi görünüyor
+import shutil # is_tool_installed için
 from platform import system
 from traceback import print_exc
 from typing import Callable, List, Tuple, Any
+
+# --- UYARI ---
+# Bu betik, OSINT (Açık Kaynak İstihbaratı) araçlarını yönetir.
+# Bu araçlarla elde edilen bilgilerin gizliliğe saygılı ve yasalara uygun şekilde kullanılması gerekir.
+# Başkalarının kişisel bilgilerini izinsiz toplamak veya kötüye kullanmak YASA DIŞIDIR ve ETİK DEĞİLDİR.
+# FacialFind (Social Mapper) aracının kurulumu çok karmaşıktır ve manuel adımlar gerektirir.
+# Araçların bulduğu sonuçların doğruluğu garanti edilmez ve API'ler/web siteleri değiştikçe çalışmayabilirler.
+# --- UYARI SONU ---
+
 
 # Opsiyonel Colorama kurulumu ve renk tanımları
 try:
@@ -44,7 +53,13 @@ def pause():
         print("\nÇıkılıyor...")
         sys.exit()
 
-# === Temel Sınıflar (core.py yerine buraya entegre edildi) ===
+# --- Yardımcı Fonksiyon: Aracın kurulu olup olmadığını kontrol et ---
+def is_tool_installed(tool_name):
+    """Basitçe komutun sistem PATH'inde olup olmadığını kontrol eder."""
+    return shutil.which(tool_name) is not None
+
+# === Temel Sınıflar (Framework Yapısı) ===
+# (Bu sınıflar önceki framework betiklerindeki ile aynıdır)
 
 class HackingTool(object):
     """Tek bir aracı temsil eden temel sınıf."""
@@ -76,7 +91,11 @@ class HackingTool(object):
 
         print(f"{C}--- Komutlar Çalıştırılıyor ---{RESET}")
         success = True
-        effective_cwd = target_dir if (target_dir and os.path.isdir(target_dir)) else None
+        effective_cwd = target_dir or self.INSTALLATION_DIR or None
+        if effective_cwd and not os.path.isdir(effective_cwd):
+             # Hedef dizin yoksa uyarı ver ama komutları mevcut dizinde çalıştırmayı dene
+             print(f"{Y}Uyarı: Hedef dizin '{effective_cwd}' mevcut değil. Komutlar mevcut dizinde çalıştırılacak.{RESET}")
+             effective_cwd = None
 
         for command in command_list:
             print(f"{Y}>> Çalıştırılıyor: {command}{RESET}")
@@ -84,12 +103,12 @@ class HackingTool(object):
                 print(f"{C}   (Dizin: {effective_cwd}){RESET}")
 
             try:
-                # shell=True, 'cd ... && ...' gibi yapıları çalıştırır ama güvenlik riski!
-                # Özellikle sudo ile birlikte daha riskli olabilir.
+                # shell=True riskli ama 'cd ... && ...' için gerekli olabilir.
                 subprocess.run(command, shell=True, check=True, cwd=effective_cwd)
             except FileNotFoundError as e:
                  print(f"{R}HATA: Komut veya program bulunamadı: {e}{RESET}")
                  print(f"{Y}Komut: '{command}'{RESET}")
+                 print(f"{Y}Gerekli programın (örn: git, pip, bash, gcc) kurulu ve PATH'de olduğundan emin olun.{RESET}")
                  success = False
                  break
             except subprocess.CalledProcessError as e:
@@ -108,11 +127,12 @@ class HackingTool(object):
     def show_info(self):
         """Aracın bilgilerini gösterir."""
         print(f"\n{G}{BRIGHT}--- {self.TITLE} ---{RESET}")
-        clean_desc = self.DESCRIPTION.replace('\n\b', '\n').replace(' | boxes | lolcat', '') # Styling komutlarını temizle
+        # Styling komutlarını ve garip karakterleri temizle
+        clean_desc = self.DESCRIPTION.replace('\n\b', '\n').replace(' | boxes | lolcat', '')
         print(clean_desc)
         if self.PROJECT_URL:
             print(f"\n{C}Proje Sayfası:{W} {self.PROJECT_URL}{RESET}")
-        print("-" * (len(self.TITLE) + 6))
+        print("-" * (len(strip_colors(self.TITLE)) + 6))
 
     def show_options(self, parent=None):
         """Aracın seçeneklerini gösterir ve seçimi işler."""
@@ -154,6 +174,9 @@ class HackingTool(object):
         except (ValueError, TypeError):
              print(f"{R}Lütfen geçerli bir numara girin.{RESET}")
              time.sleep(1)
+        except KeyboardInterrupt:
+             print("\nİşlem iptal edildi.")
+             return None # Ana menüye dön
         except Exception:
             print(f"{R}Bir hata oluştu!{RESET}")
             print_exc()
@@ -170,11 +193,15 @@ class HackingTool(object):
     def install(self):
         """Varsayılan kurulum metodu. INSTALL_COMMANDS'ı çalıştırır."""
         self.before_install()
-        self._execute_commands(self.INSTALL_COMMANDS, target_dir=None) # Komutlar kendi cd'sini içerebilir
-        self.after_install()
+        success = self._execute_commands(self.INSTALL_COMMANDS, target_dir=None)
+        self.after_install(success)
+        return success
 
-    def after_install(self):
-        print(f"\n{G}{self.TITLE} kurulumu tamamlandı (hatalar için yukarıyı kontrol edin).{RESET}")
+    def after_install(self, success):
+        if success:
+            print(f"\n{G}{self.TITLE} kurulumu başarıyla tamamlandı (veya hatalarla bitti, yukarıyı kontrol edin).{RESET}")
+        else:
+            print(f"\n{R}{self.TITLE} kurulumu başarısız oldu.{RESET}")
 
     def before_uninstall(self) -> bool:
         confirm = input(f"{Y}UYARI: {self.TITLE} kaldırılacak. Emin misiniz? [e/H]: {W}").strip().lower()
@@ -183,11 +210,19 @@ class HackingTool(object):
     def uninstall(self):
         if self.before_uninstall():
             print(f"\n{C}{self.TITLE} kaldırılıyor...{RESET}")
-            self._execute_commands(self.UNINSTALL_COMMANDS)
-            self.after_uninstall()
+            success = self._execute_commands(self.UNINSTALL_COMMANDS)
+            self.after_uninstall(success)
+            return success
+        else:
+            print("Kaldırma işlemi iptal edildi.")
+            return False
 
-    def after_uninstall(self):
-        print(f"\n{G}{self.TITLE} kaldırıldı.{RESET}")
+    def after_uninstall(self, success):
+        if success:
+             print(f"\n{G}{self.TITLE} kaldırıldı (veya hatalarla bitti).{RESET}")
+        else:
+             print(f"\n{R}{self.TITLE} kaldırma işlemi başarısız oldu.{RESET}")
+
 
     def before_run(self):
         print(f"\n{C}{self.TITLE} çalıştırılıyor...{RESET}")
@@ -195,13 +230,16 @@ class HackingTool(object):
     def run(self):
         """Varsayılan çalıştırma metodu. RUN_COMMANDS listesini çalıştırır."""
         self.before_run()
+        success = False
         if not self.RUN_COMMANDS:
             print(f"{Y}Bu araç için özel bir 'run' metodu veya RUN_COMMANDS tanımlanmamış.{RESET}")
         else:
-             self._execute_commands(self.RUN_COMMANDS, target_dir=self.INSTALLATION_DIR)
-        self.after_run()
+             # RUN_COMMANDS içindeki komutları INSTALLATION_DIR içinde çalıştırmayı dene
+             success = self._execute_commands(self.RUN_COMMANDS, target_dir=self.INSTALLATION_DIR)
+        self.after_run(success)
+        return success
 
-    def after_run(self):
+    def after_run(self, success):
         pass
 
     def show_project_page(self):
@@ -232,14 +270,14 @@ class HackingToolsCollection(HackingTool):
         print(f"\n{M}{BRIGHT}=== {self.TITLE} ==={RESET}")
         if self.DESCRIPTION:
             print(self.DESCRIPTION)
-        print("=" * (len(self.TITLE) + 6))
+        print("=" * (len(strip_colors(self.TITLE)) + 6))
 
     def show_options(self, parent = None):
         """Koleksiyon içindeki araçları listeler."""
         clear_screen()
         self.show_info()
         print(f"\n{Y}Araçlar:{RESET}")
-        valid_indices = list(range(len(self.TOOLS)))
+        valid_indices = list(range(len(self.TOOLS))) # 0'dan başlayan indeksler
         for index, tool in enumerate(self.TOOLS):
             tool_title = getattr(tool, 'TITLE', f'İsimsiz Araç {index}')
             print(f"  [{index}] {tool_title}")
@@ -264,6 +302,9 @@ class HackingToolsCollection(HackingTool):
         except (ValueError, TypeError):
              print(f"{R}Lütfen geçerli bir numara girin.{RESET}")
              time.sleep(1)
+        except KeyboardInterrupt:
+             print("\nİşlem iptal edildi.")
+             return None # Ana menüye dön
         except Exception:
             print(f"{R}Bir hata oluştu!{RESET}")
             print_exc()
@@ -277,182 +318,266 @@ class HackingToolsCollection(HackingTool):
 # === Sosyal Medya Bulucu Araç Tanımlamaları ===
 
 class FacialFind(HackingTool):
-    TITLE = "Sosyal Medya Bulucu (Yüz Tanıma)"
+    TITLE = f"Sosyal Medya Bulucu (Yüz Tanıma - Social Mapper) {R}{BRIGHT}(KURULUMU ÇOK ZOR!){RESET}"
     DESCRIPTION = (
-        "Farklı sitelerdeki profilleri yüz tanıma yoluyla ilişkilendiren\n"
+        "Farklı sitelerdeki profilleri yüz tanıma yoluyla ilişkilendirmeye çalışan\n"
         "bir Sosyal Medya Haritalama Aracı (Social Mapper).\n\n"
-        f"{R}{BRIGHT}UYARI: Kurulumu karmaşıktır, manuel adımlar ve ek bağımlılıklar gerektirir!{RESET}"
+        f"{R}{BRIGHT}UYARI: Kurulumu çok adımlıdır, işletim sistemine özgüdür (Linux/Debian tabanlı), \n"
+        f"manuel Geckodriver kurulumu ve betik içinde hesap ayarları gerektirir!{RESET}\n"
+        f"{Y}Başarılı kurulum garanti edilmez.{RESET}"
     )
     INSTALLATION_DIR = "social_mapper"
-    # Kurulum komutları OS bağımlı (apt) ve karmaşık
+    # Kurulum komutları OS bağımlı (apt) ve karmaşık, sadece bilgilendirme amaçlıdır.
+    # Bu komutların doğrudan çalışması pek olası değildir.
     INSTALL_COMMANDS = [
-        # Debian/Ubuntu için bağımlılıklar ve PPA ekleme
-        "echo '--- Sistem paketleri güncelleniyor ve bağımlılıklar kuruluyor (sudo gerektirir) ---' && sudo apt update && sudo apt install -y software-properties-common build-essential cmake libgtk-3-dev libboost-all-dev",
-        # Firefox PPA (Social Mapper'ın belirli bir FF sürümüne ihtiyacı olabilir)
-        "echo '--- Firefox PPA ekleniyor (sudo gerektirir) ---' && sudo add-apt-repository -y ppa:mozillateam/firefox-next && sudo apt update",
+        # Debian/Ubuntu için bağımlılıklar ve PPA ekleme (sudo gerektirir)
+        "echo '--- Sistem paketleri güncelleniyor ve bağımlılıklar kuruluyor (sudo apt gerektirir) ---'",
+        "echo '--- Örnek Bağımlılıklar (Debian/Ubuntu): sudo apt update && sudo apt install -y software-properties-common build-essential cmake libgtk-3-dev libboost-all-dev firefox ---'",
         # Social Mapper'ı klonla
-        f"echo '--- Social Mapper klonlanıyor ---' && sudo git clone https://github.com/Greenwolf/social_mapper.git {INSTALLATION_DIR}",
-        # Python bağımlılıklarını kur (dizin içinde)
-        f"echo '--- Python bağımlılıkları kuruluyor (sudo ve pip gerektirir) ---' && cd {os.path.join(INSTALLATION_DIR, 'setup')} && sudo {sys.executable} -m pip install --no-cache-dir -r requirements.txt",
-        # Manuel Adımlar İçin Uyarı (boxes/lolcat kaldırıldı)
+        f"echo '--- Social Mapper klonlanıyor ({INSTALLATION_DIR}) ---'",
+        f"sudo git clone https://github.com/Greenwolf/social_mapper.git {INSTALLATION_DIR}",
+        # Python bağımlılıklarını kur (dizin içinde) - setup.py de olabilir, requirements.txt de
+        f"echo '--- Python bağımlılıkları kuruluyor (sudo ve pip gerektirir) ---'",
+        f"echo '--- Örnek: cd {os.path.join(INSTALLATION_DIR, 'setup')} && sudo {sys.executable} -m pip install --no-cache-dir -r requirements.txt ---'",
+        # Manuel Adımlar İçin Uyarı
         (
-            f"echo '\n{Y}{BRIGHT}--- MANUEL KURULUM GEREKLİ! ---{RESET}\n"
-            f"{Y}[!] İşletim sisteminiz için Geckodriver'ı kurmanız gerekiyor.{RESET}\n"
-            f"{Y}[!] İndirme Linki: https://github.com/mozilla/geckodriver/releases{RESET}\n"
-            f"{Y}[!] Linux'ta indirip /usr/local/bin veya /usr/bin gibi PATH içindeki bir yere taşıyın.{RESET}\n"
-            f"{Y}[!] Ardından social_mapper.py içindeki kullanıcı adı/şifre ayarlarını yapın.{RESET}'"
+            f"echo '\n{R}{BRIGHT}--- !!! ÖNEMLİ MANUEL KURULUM ADIMLARI GEREKLİ !!! ---{RESET}\n"
+            f"{Y}[1] İşletim sisteminize uygun Firefox ve Geckodriver sürümünü kurun.{RESET}\n"
+            f"{Y}    İndirme Linki: https://github.com/mozilla/geckodriver/releases{RESET}\n"
+            f"{Y}    Linux'ta indirip /usr/local/bin gibi PATH içindeki bir yere taşıyın ('sudo mv geckodriver /usr/local/bin').{RESET}\n"
+            f"{Y}[2] '{os.path.join(INSTALLATION_DIR, 'social_mapper.py')}' dosyasını açıp,\n"
+            f"    kullanmak istediğiniz sosyal medya platformları için (örn: Facebook, Instagram)\n"
+            f"    geçerli bir kullanıcı adı ve şifre (gerçek veya test hesabı) girmeniz GEREKİR!{RESET}\n"
+            f"{Y}[3] Gerekli diğer sistem kütüphanelerini (cmake, boost, gtk) kurduğunuzdan emin olun.{RESET}'"
         )
     ]
     PROJECT_URL = "https://github.com/Greenwolf/social_mapper"
+    # Run metodu sadece yardım ve talimatları gösterir
     RUN_COMMANDS = [] # run override edildi
 
+    def install(self):
+        # Kurulum komutları sadece bilgilendirme amaçlı, çalıştırmıyoruz.
+        self.before_install()
+        print(f"{Y}Social Mapper kurulumu oldukça karmaşıktır ve manuel adımlar gerektirir.{RESET}")
+        print(f"{Y}Aşağıdaki adımlar genel bir yol haritasıdır (Debian/Ubuntu tabanlı sistemler için):{RESET}")
+        # Bilgilendirme amaçlı komutları yazdır
+        for cmd in self.INSTALL_COMMANDS:
+             # echo komutlarını doğrudan çalıştırabiliriz
+             if cmd.startswith("echo "):
+                  os.system(cmd)
+             else:
+                  # Diğer komutları sadece gösterelim
+                  print(f"{C}   {cmd}{RESET}")
+        print(f"\n{R}Lütfen yukarıdaki MANUEL adımları dikkatlice uygulayın!{RESET}")
+        self.after_install(False) # Başarısız gibi işaretleyelim çünkü manuel adım gerekli
+        return False
+
     def run(self):
-        run_dir = os.path.join(self.INSTALLATION_DIR, "setup") # Çalıştırılacak dizin farklı
-        script_name = "social_mapper.py"
-        script_path = os.path.join(run_dir, script_name)
+        """Social Mapper'ın nasıl çalıştırılacağına dair talimatları gösterir."""
+        self.before_run()
+        run_dir = self.INSTALLATION_DIR
+        # Betik adı genellikle 'social_mapper.py' olur
+        script_path = os.path.join(run_dir, "social_mapper.py")
 
-        if not os.path.exists(run_dir) or not os.path.exists(script_path):
+        if not os.path.isdir(run_dir) or not os.path.isfile(script_path):
             print(f"{R}HATA: '{run_dir}' veya '{script_path}' bulunamadı.{RESET}")
-            print(f"{Y}Kurulumu yapın ('Install') ve manuel adımları tamamladığınızdan emin olun.{RESET}")
-            return
+            print(f"{Y}Kurulumu yapın ('Install' seçeneği) ve manuel adımları tamamladığınızdan emin olun.{RESET}")
+            return False
 
-        # Yardım menüsünü göster ve ek talimatlar ver
+        # Yardım menüsünü göstermeyi deneyelim (sudo gerekebilir)
         print(f"\n{C}Social Mapper yardım menüsü gösteriliyor...{RESET}")
         command_help = ["sudo", sys.executable, script_path, "-h"]
         try:
-             subprocess.run(command_help, check=True) # cwd burada gereksiz
+             # cwd burada gerekmeyebilir çünkü script_path tam yol
+             subprocess.run(command_help, check=True, timeout=10)
+        except FileNotFoundError:
+             print(f"{R}HATA: 'sudo', Python yorumlayıcısı veya '{script_path}' bulunamadı.{RESET}")
+        except subprocess.TimeoutExpired:
+             print(f"{Y}Yardım komutu zaman aşımına uğradı.{RESET}")
+        except subprocess.CalledProcessError:
+             print(f"{Y}Yardım komutu çalıştırılırken hata oluştu (muhtemelen bağımlılık eksik).{RESET}")
         except Exception as e:
-             print(f"{R}Yardım menüsü gösterilirken hata: {e}{RESET}")
+             print(f"{R}Yardım menüsü gösterilirken beklenmedik hata: {e}{RESET}")
 
-        print(f"""\n{Y}{BRIGHT}--- Önemli Ayarlar ---{RESET}
-{C}Çalıştırmadan önce '{script_path}' dosyasını açıp{RESET}
-{C}kullanmak istediğiniz sosyal medya hesaplarının (gerçek veya sahte){RESET}
-{C}kullanıcı adı ve şifrelerini ilgili bölümlere girmeniz GEREKİR!{RESET}
-{Y}---------------------{RESET}""")
+        # Ek talimatlar
+        print(f"""\n{R}{BRIGHT}--- ÖNEMLİ ÇALIŞTIRMA NOTLARI ---{RESET}
+{C}1. Çalıştırmadan önce '{script_path}' dosyasını açıp,
+   ilgili sosyal medya platformları için kullanıcı adı ve şifreleri
+   (Facebook, Instagram vb.) girmeniz ZORUNLUDUR!{RESET}
+{C}2. Geckodriver'ın sistem PATH'inde olduğundan emin olun.{RESET}
+{C}3. Gerekli tüm sistem kütüphanelerinin (cmake, boost, gtk) kurulu olduğundan emin olun.{RESET}
+{Y}-----------------------------------{RESET}""")
 
-        print(f"""\n{Y}{BRIGHT}--- Örnek Kullanım ---{RESET}
-{G}sudo python3 {script_path} -f <input_folder> -i <image_folder> -m fast -fb -tw{RESET}
-{C}(<input_folder>: Kişi isimlerinin olduğu klasör, <image_folder>: Yüz resimlerinin olduğu klasör){RESET}
-{Y}-------------------{RESET}""")
-        # echo "python social_mapper.py -f [<imageFoldername>] -i [<imgFolderPath>] -m fast [<AcName>] -fb -tw" | boxes | lolcat'
+        print(f"""\n{Y}{BRIGHT}--- Örnek Kullanım Komutları ---{RESET}
+{G}# Sadece isim listesi ve resim klasörü ile çalıştırma (Facebook ve Twitter'da arama):{RESET}
+{W}sudo python3 {script_path} -f names.txt -i image_folder -m fast -fb -tw{RESET}
+
+{G}# Daha fazla detay için:{RESET}
+{W}sudo python3 {script_path} --help{RESET}
+{Y}-----------------------------{RESET}""")
+        self.after_run(True) # Bilgi verdiği için başarılı sayalım
+        return True
 
 
 class FindUser(HackingTool):
-    TITLE = "Kullanıcı Adı Bulucu (finduser)"
-    DESCRIPTION = "+75 sosyal ağda kullanıcı adlarını arar."
+    TITLE = "Kullanıcı Adı Bulucu (finduser - xHak9x)"
+    DESCRIPTION = f"+75 sosyal ağda kullanıcı adlarını arar.\n{Y}(Bash betiği gerektirir){RESET}"
     INSTALLATION_DIR = "finduser"
     INSTALL_COMMANDS = [
         f"sudo git clone https://github.com/xHak9x/finduser.git {INSTALLATION_DIR}",
+        # Çalıştırma izni ver
         f"cd {INSTALLATION_DIR} && sudo chmod +x finduser.sh"
     ]
     # run metodu override edilmediği için RUN_COMMANDS kullanılır
-    RUN_COMMANDS = ["sudo bash finduser.sh"] # Bu betik interaktif olmalı
+    # Bu betik interaktif olduğu için doğrudan çalıştırmak mantıklı
+    RUN_COMMANDS = ["sudo bash finduser.sh"]
     PROJECT_URL = "https://github.com/xHak9x/finduser"
+
+    def install(self):
+        # Bash kontrolü
+        if not is_tool_installed("bash"):
+            print(f"{R}HATA: 'bash' komutu bulunamadı. Bu araç bir bash betiği gerektirir.{RESET}")
+            return False
+        return super().install()
+
+    def run(self):
+        # Bash kontrolü
+        if not is_tool_installed("bash"):
+             print(f"{R}HATA: 'bash' komutu bulunamadığı için araç çalıştırılamıyor.{RESET}")
+             return False
+        # Kurulum dizini kontrolü
+        if not os.path.isdir(self.INSTALLATION_DIR) or not os.path.isfile(os.path.join(self.INSTALLATION_DIR, "finduser.sh")):
+             print(f"{R}HATA: '{self.INSTALLATION_DIR}' veya içindeki 'finduser.sh' bulunamadı.{RESET}")
+             print(f"{Y}Lütfen önce aracı kurun ('Install' seçeneği).{RESET}")
+             return False
+        # Normal çalıştırmayı yap (RUN_COMMANDS kullanılır)
+        return super().run()
 
 
 class Sherlock(HackingTool):
     TITLE = "Sherlock (Username Finder)"
     DESCRIPTION = (
-        "Sosyal ağlarda kullanıcı adıyla hesap arar.\n"
+        "Çok sayıda sosyal ağda kullanıcı adıyla hesap arar.\n"
         f"{Y}Daha fazla kullanım için:{W} python3 sherlock --help{RESET}"
     )
     INSTALLATION_DIR = "sherlock"
     INSTALL_COMMANDS = [
         f"git clone https://github.com/sherlock-project/sherlock.git {INSTALLATION_DIR}",
+        # Bağımlılıkları kur (sudo gerekebilir/gerekmeyebilir)
         f"cd {INSTALLATION_DIR} && sudo {sys.executable} -m pip install -r requirements.txt"
     ]
     PROJECT_URL = "https://github.com/sherlock-project/sherlock"
     RUN_COMMANDS = [] # run override edildi
 
     def run(self):
+        """Kullanıcıdan kullanıcı adı alarak Sherlock'u çalıştırır."""
         run_dir = self.INSTALLATION_DIR
-        script_name = "sherlock" # Kurulum sonrası komut adı
-        script_path = os.path.join(run_dir, script_name) # Betiğin tam yolu
+        # Sherlock kurulum sonrası genellikle doğrudan komut olarak çalışır hale gelir
+        # Ama biz betiği doğrudan çalıştıralım (daha güvenilir olabilir)
+        script_name = "sherlock.py" # Repo içindeki ana betik adı
+        script_path = os.path.join(run_dir, "sherlock", script_name) # İç içe bir 'sherlock' klasörü daha var
 
-        if not os.path.exists(run_dir) or not os.path.exists(script_path):
-            print(f"{R}HATA: '{run_dir}' veya '{script_path}' bulunamadı.{RESET}")
-            print("Kurulumu yapın ('Install').")
-            return
+        if not os.path.isdir(run_dir) or not os.path.isfile(script_path):
+            print(f"{R}HATA: Sherlock kurulu değil veya '{script_path}' bulunamadı.{RESET}")
+            print(f"{Y}Lütfen önce aracı kurun ('Install' seçeneği).{RESET}")
+            return False
 
-        name = input(f" Aranacak Kullanıcı Ad(lar)ı (boşlukla ayırın) [{self.TITLE}] >> ")
-        if not name:
-            print(f"{R}HATA: Kullanıcı adı boş olamaz.{RESET}")
-            return
-
-        # Kullanıcı adlarını ayır
-        usernames = name.split()
-        # Timeout, output file gibi ek parametreler sorulabilir
-        timeout = input(f" Zaman Aşımı (saniye, boş bırakırsanız varsayılan) [{self.TITLE}] >> ").strip()
-        output_file = input(f" Çıktı Dosyası (isteğe bağlı) [{self.TITLE}] >> ").strip()
-
-        command = ["sudo", sys.executable, script_path] # sudo gerekebilir mi? Deneyelim.
-        command.extend(usernames)
-        if timeout and timeout.isdigit(): command.extend(["--timeout", timeout])
-        if output_file: command.extend(["--output", output_file])
-        # Örnek: command.append("--print-found") # Sadece bulunanları yazdır
-
-        print(f"\n{Y}Çalıştırılan komut: {' '.join(command)}{RESET}")
         try:
+            names_input = input(f" Aranacak Kullanıcı Ad(lar)ı (boşlukla ayırın) [{self.TITLE}] >> ").strip()
+            if not names_input:
+                print(f"{R}HATA: Kullanıcı adı boş olamaz.{RESET}")
+                return False
+
+            # Kullanıcı adlarını ayır
+            usernames = names_input.split()
+
+            # İsteğe bağlı ek parametreler
+            timeout_str = input(f" Zaman Aşımı (saniye, boş bırakırsanız varsayılan) [{self.TITLE}] >> ").strip()
+            output_file = input(f" Çıktı Dosyası (isteğe bağlı, örn: results.txt) [{self.TITLE}] >> ").strip()
+            # Diğer seçenekler: --print-found, --site <site_name>, --proxy <PROXY_URL> vb.
+
+            # Komutu oluştur (sudo genellikle gerekmez)
+            command = [sys.executable, script_path]
+            command.extend(usernames) # Kullanıcı adlarını ekle
+            if timeout_str and timeout_str.isdigit(): command.extend(["--timeout", timeout_str])
+            if output_file: command.extend(["--output", output_file])
+            # Örnek: command.append("--print-found") # Sadece bulunanları yazdır
+
+            print(f"\n{Y}Çalıştırılan komut: {' '.join(command)}{RESET}")
+            print(f"{C}Sherlock çalışıyor... (Durdurmak için Ctrl+C){RESET}")
             # Sherlock kendi dizininden çalışmalı
             subprocess.run(command, cwd=run_dir, check=True)
-        except FileNotFoundError:
-             print(f"{R}HATA: '{sys.executable}', 'sudo' veya '{script_path}' bulunamadı.{RESET}")
-        except subprocess.CalledProcessError as e:
-             print(f"{R}HATA: Sherlock hatası (Kod: {e.returncode}).{RESET}")
+            return True
         except KeyboardInterrupt:
             print("\nİşlem kullanıcı tarafından iptal edildi.")
+            return False
+        except FileNotFoundError:
+             print(f"{R}HATA: Python yorumlayıcısı veya '{script_path}' bulunamadı.{RESET}")
+             return False
+        except subprocess.CalledProcessError as e:
+             print(f"{R}HATA: Sherlock hatası (Kod: {e.returncode}).{RESET}")
+             return False
         except Exception as e:
              print(f"{R}Beklenmedik hata: {e}{RESET}")
+             return False
 
 
 class SocialScan(HackingTool):
-    TITLE = "SocialScan (Username/Email Check)"
+    TITLE = "SocialScan (Username/Email Availability Check)"
     DESCRIPTION = (
         "Çevrimiçi platformlarda kullanıcı adı ve e-posta adresinin \n"
-        "kullanılabilirliğini %100 doğrulukla kontrol eder."
+        "kullanılabilirliğini yüksek doğrulukla kontrol eder."
     )
     # Pip ile kurulur, INSTALLATION_DIR gereksiz
+    INSTALLATION_DIR = ""
     INSTALL_COMMANDS = [f"sudo {sys.executable} -m pip install socialscan"]
     PROJECT_URL = "https://github.com/iojw/socialscan"
     RUN_COMMANDS = [] # run override edildi
 
     def run(self):
-        # socialscan komutunun PATH'de olduğunu varsayalım
-        if not self._is_tool_installed("socialscan"):
-             print(f"{R}HATA: 'socialscan' komutu bulunamadı. Kurulum başarılı oldu mu ('Install')?{RESET}")
-             return
+        """Kullanıcıdan girdi alarak socialscan'ı çalıştırır."""
+        tool = "socialscan"
+        # Önce aracın kurulu olup olmadığını kontrol et
+        if not is_tool_installed(tool):
+             print(f"{R}HATA: '{tool}' komutu bulunamadı.{RESET}")
+             print(f"{Y}Lütfen önce aracı kurun ('Install' seçeneği).{RESET}")
+             return False
 
-        name = input(f" Kullanıcı Adı veya Email (birden fazlaysa boşlukla ayırın) [{self.TITLE}] >> ")
-        if not name:
-             print(f"{R}HATA: Girdi boş olamaz.{RESET}")
-             return
-
-        # Girdiyi boşluklara göre ayır
-        targets = name.split()
-        command = ["sudo", "socialscan"] # sudo gerekebilir mi? Deneyelim.
-        command.extend(targets)
-
-        print(f"\n{Y}Çalıştırılan komut: {' '.join(command)}{RESET}")
         try:
+            targets_input = input(f" Kullanıcı Adı veya Email (birden fazlaysa boşlukla ayırın) [{self.TITLE}] >> ").strip()
+            if not targets_input:
+                 print(f"{R}HATA: Girdi boş olamaz.{RESET}")
+                 return False
+
+            # Girdiyi boşluklara göre ayır
+            targets = targets_input.split()
+            # Komutu oluştur (sudo genellikle gerekmez)
+            command = [tool]
+            command.extend(targets)
+            # Diğer seçenekler: --platforms, --show-available, --fast vb.
+
+            print(f"\n{Y}Çalıştırılan komut: {' '.join(command)}{RESET}")
             subprocess.run(command, check=True)
-        except FileNotFoundError:
-             print(f"{R}HATA: 'socialscan' veya 'sudo' komutu bulunamadı.{RESET}")
-        except subprocess.CalledProcessError as e:
-             print(f"{R}HATA: SocialScan hatası (Kod: {e.returncode}).{RESET}")
+            return True
         except KeyboardInterrupt:
             print("\nİşlem kullanıcı tarafından iptal edildi.")
+            return False
+        except FileNotFoundError:
+             # Bu durum is_tool_installed kontrolünden sonra pek olası değil ama...
+             print(f"{R}HATA: '{tool}' komutu çalıştırılamadı.{RESET}")
+             return False
+        except subprocess.CalledProcessError as e:
+             print(f"{R}HATA: SocialScan hatası (Kod: {e.returncode}).{RESET}")
+             return False
         except Exception as e:
              print(f"{R}Beklenmedik hata: {e}{RESET}")
+             return False
 
-    # Dirb'den kopyalanan yardımcı fonksiyon
-    def _is_tool_installed(self, tool_name):
-        """Basitçe komutun PATH içinde olup olmadığını kontrol eder."""
-        import shutil
-        return shutil.which(tool_name) is not None
 
+# === Ana Koleksiyon Tanımı ===
 
 class SocialMediaFinderTools(HackingToolsCollection):
-    TITLE = "Sosyal Medya Bulucu Araçlar"
+    TITLE = "Sosyal Medya Bulucu Araçlar (OSINT)"
     DESCRIPTION = "Kullanıcı adı, e-posta veya yüz tanıma ile sosyal medya profillerini bulma araçları."
     TOOLS = [
         FacialFind(),
@@ -463,6 +588,16 @@ class SocialMediaFinderTools(HackingToolsCollection):
 
 # === Ana Çalıştırma Bloğu ===
 if __name__ == '__main__':
+    # Gerekli temel kütüphaneleri kontrol et (webbrowser, shutil)
+    try:
+        import webbrowser
+        import shutil
+    except ImportError as e:
+        missing_module = str(e).split("'")[-2]
+        print(f"{R}HATA: Gerekli '{missing_module}' kütüphanesi bulunamadı.{RESET}")
+        sys.exit(1)
+
+    # Ana koleksiyonu oluştur
     main_collection = SocialMediaFinderTools()
     try:
          main_collection.show_options()
