@@ -7,7 +7,7 @@ import re
 import math # Sütun hesaplaması için eklendi
 
 # --- UYARI ---
-# (Uyarı metni öncekiyle aynı, buraya tekrar eklemiyorum)
+# (Uyarı metni öncekiyle aynı)
 # --- UYARI SONU ---
 
 # Colorama import ve fallback mekanizması
@@ -33,15 +33,15 @@ except ImportError:
     class Back: pass
 
 
-# Banner - Orijinal "401", Parlak Yeşil
-banner_padding = " " * 12 # Kullanıcının belirttiği padding
+# Banner - Orijinal Bitişik Stil (Cyan/Magenta) ve Ortalanmış
+banner_padding = " " * 25 # Ortalamak için boşluğu tekrar artırdım (banner daraldı)
 banner = f"""
-{banner_padding}{G}{BRIGHT}██╗  ██╗ ██████╗  ██╗{RESET}
-{banner_padding}{G}{BRIGHT}██║  ██║██╔═████╗███║{RESET}
-{banner_padding}{G}{BRIGHT}███████║██║██╔██║╚██║{RESET}
-{banner_padding}{G}{BRIGHT}╚════██║████╔╝██║ ██║{RESET}
-{banner_padding}{G}{BRIGHT}     ██║╚██████╔╝ ██║{RESET}
-{banner_padding}{G}{BRIGHT}     ╚═╝ ╚═════╝  ╚═╝{RESET}
+{banner_padding}{C}{BRIGHT}██╗  ██╗{M}{BRIGHT} ██████╗ {C}{BRIGHT} ██╗{RESET}
+{banner_padding}{C}{BRIGHT}██║  ██║{M}{BRIGHT}██╔═████╗{C}{BRIGHT}███║{RESET}
+{banner_padding}{C}{BRIGHT}███████║{M}{BRIGHT}██║██╔██║{C}{BRIGHT}╚██║{RESET}
+{banner_padding}{C}{BRIGHT}╚════██║{M}{BRIGHT}████╔╝██║{C}{BRIGHT} ██║{RESET}
+{banner_padding}{C}{BRIGHT}     ██║{M}{BRIGHT}╚██████╔╝{C}{BRIGHT} ██║{RESET}
+{banner_padding}{C}{BRIGHT}     ╚═╝{M}{BRIGHT} ╚═════╝ {C}{BRIGHT} ╚═╝{RESET}
 """
 
 # Renk kodlarını temizleyen fonksiyon (hizalama için)
@@ -54,40 +54,41 @@ def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def show_menu():
-    """İstenilen stile göre (er.jpg) güncellenmiş 2 sütunlu menü."""
+    """İstenilen stile (er.jpg) BİREBİR benzeyen menü (Banner Bitişik)."""
     clear_screen()
     print(banner)
-    print(f"{C}{BRIGHT}    Crack Your World, If You Can{RESET}") # Örnekteki gibi bir alt başlık
-    print(f"{Y}         Version: 2.1{RESET}") # Versiyon bilgisi
-    print() # Boşluk
+    # Alt başlıkların hizalamasını dar banner'a göre ayarla
+    print(f"{G}{BRIGHT}{' ' * 28}by 401HackTeam{RESET}") # Boşluğu artırdım
+    print(f"{Y}{' ' * 30}Version: 1.1{RESET}")      # Boşluğu artırdım
+    print()
 
-    # Menü Öğeleri (IP Tool kaldırılmış, 1-25 arası numaralı liste)
+    # Menü Öğeleri (Açıklamasız)
     menu_items = {
-        '1': f"Call Bomb", # Metin rengi Cyan
-        '2': f"SMS Bomb",
-        '3': f"DoS Saldırısı",
-        '4': f"Yedek DDoS",
-        '5': f"Base64 Decode",
-        '6': f"Chromecast Hack",
-        '7': f"Web Saldırı Araçları",
-        '8': f"Instagram Araçları",
-        '9': f"Sosyal Medya Bulucu",
-        '10': f"Wi-Fi Jammer ",
-        '11': f"DDoS Araçları",
-        '12': f"Ağ Tünelleme",
-        '13': f"Bilgi Toplayıcı",
-        '14': f"Bruteforce Aracı",
-        '15': f"GPS Spoofer",
-        '16': f"Kamera Görüntüleme",
-        '17': f"Phishing Tool",
-        '18': f"Konum Takip",
-        '19': f"Özel Link Kısaltıcı",
-        '20': f"Pattern Kırıcı",
-        '21': f"SIM Klonlayıcı",
-        '22': f"IP/Site Dönüştürücü",
-        '23': f"WiFi Şifre Kırıcı",
-        '24': f"WhatsApp Analiz Tool",
-        '25': f"Yedek Wi-Fi Jammer"
+        '1': "Call Bomb",
+        '2': "SMS Bomb",
+        '3': "DoS Saldırısı",
+        '4': "Yedek DDoS",
+        '5': "Base64 Decode",
+        '6': "Chromecast Hack",
+        '7': "Web Saldırı",
+        '8': "Instagram Araçları",
+        '9': "Sosyal Medya Bulucu",
+        '10': "Wi-Fi Jammer",
+        '11': "DDoS Araçları",
+        '12': "Ağ Tünelleme",
+        '13': "Bilgi Toplayıcı",
+        '14': "Bruteforce Aracı",
+        '15': "GPS Spoofer",
+        '16': "Kamera Görüntüleme",
+        '17': "Log/Phishing/FakeAPK",
+        '18': "Konum Takip",
+        '19': "Özel Link Kısaltıcı",
+        '20': "Pattern Kırıcı",
+        '21': "SIM Klonlayıcı",
+        '22': "IP/Site Dönüştürücü",
+        '23': "WiFi Şifre Kırıcı",
+        '24': "WhatsApp Analiz",
+        '25': "Yedek Wi-Fi Jammer"
     }
 
     try:
@@ -99,69 +100,56 @@ def show_menu():
         # --- Sütun Genişliği Hesaplama ---
         max_col1_width_plain = 0
         for i in range(num_rows):
-            idx1 = i * 2 # Sol sütun indeksi
+            idx1 = i * 2
             if idx1 < num_items:
-                key1 = str(idx1 + 1) # Gösterilecek numara (1, 3, 5...)
-                value1 = menu_items.get(key1, "") # Değeri al
-                # Renksiz format: "XX. Tool Name (Status)"
-                item_str_plain = f"{key1.rjust(2)}. {strip_colors(value1)}"
+                key1 = str(idx1 + 1)
+                value1 = menu_items.get(key1, "")
+                item_str_plain = f"{key1.rjust(2)}. {value1}"
                 max_col1_width_plain = max(max_col1_width_plain, len(item_str_plain))
 
-        col_spacing = 4 # Sütunlar arası boşluk
-        # Toplam menü genişliğini dinamik hesapla (veya sabit tut)
-        # Örnekteki gibi bir genişlik belirleyelim:
-        menu_width = 76 # Ayarlanabilir
-        inner_width = menu_width - 2 # | | arası boşluk
+        col_spacing = 4
+        menu_width = 70 # Genişlik
+        inner_width = menu_width - 2
 
         # --- Basit Kutu Çizimi (Cyan) ---
-        print(f"{C}{'-' * menu_width}{RESET}") # Üst kenar
+        print(f"{C}{'-' * menu_width}{RESET}") # Üst
 
         # Öğeleri satır satır 2 sütun halinde yazdır
         for i in range(num_rows):
-            # Sol Sütun Öğesi (Index 0, 2, 4...)
+            # Sol Sütun
             idx1 = i * 2
             item1_colored = ""
             item1_plain_len = 0
             if idx1 < num_items:
-                key1 = str(idx1 + 1) # Gösterilen Numara 1, 3, 5...
+                key1 = str(idx1 + 1)
                 value1 = menu_items.get(key1, "")
-                # Format: Beyaz Numara, Cyan Metin
-                item1_colored = f"{W}{key1.rjust(2)}.{C} {value1}"
-                item1_plain_len = len(f"{key1.rjust(2)}. {strip_colors(value1)}")
+                item1_colored = f"{W}{key1.rjust(2)}.{C} {value1}{RESET}"
+                item1_plain_len = len(f"{key1.rjust(2)}. {value1}")
 
-            # Sağ Sütun Öğesi (Index 1, 3, 5...)
+            # Sağ Sütun
             idx2 = i * 2 + 1
             item2_colored = ""
             if idx2 < num_items:
-                 key2 = str(idx2 + 1) # Gösterilen Numara 2, 4, 6...
+                 key2 = str(idx2 + 1)
                  value2 = menu_items.get(key2, "")
-                 # Format: Beyaz Numara, Cyan Metin
-                 item2_colored = f"{W}{key2.rjust(2)}.{C} {value2}"
+                 item2_colored = f"{W}{key2.rjust(2)}.{C} {value2}{RESET}"
 
-            # 1. sütundan sonraki boşluğu hesapla
             padding1 = ' ' * max(0, max_col1_width_plain - item1_plain_len + col_spacing)
-
-            # İki sütunu birleştir
             line_content_colored = f"{item1_colored}{padding1}{item2_colored}"
             line_content_plain_len = len(strip_colors(line_content_colored))
-
-            # Satırın sonuna kadar olan boşluğu hesapla
             final_padding = ' ' * max(0, inner_width - line_content_plain_len)
 
-            # Satırı yazdır
             print(f"{C}|{RESET} {line_content_colored}{final_padding} {C}|{RESET}")
 
-        # Ayırıcı ve Çıkış Seçeneği
-        print(f"{C}{'-' * menu_width}{RESET}") # Ayırıcı çizgi
+        # Ayırıcı ve Çıkış
+        print(f"{C}{'-' * menu_width}{RESET}")
 
-        # Çıkış (0) - Örnekteki 88/99 yerine 0 kullanalım
-        exit_text_colored = f"{W} 0. {R}Çıkış{W}"
+        exit_text_colored = f"{W} 0. {R}Çıkış{RESET}"
         exit_plain_len = len(strip_colors(exit_text_colored))
-        # Çıkışı sola yaslayıp sonuna kadar boşluk ekle
         final_padding_exit = ' ' * max(0, inner_width - exit_plain_len)
         print(f"{C}|{RESET} {exit_text_colored}{final_padding_exit} {C}|{RESET}")
 
-        print(f"{C}{'-' * menu_width}{RESET}") # Alt kenar
+        print(f"{C}{'-' * menu_width}{RESET}") # Alt
         # --- Menü Kutusu Sonu ---
 
     except Exception as e:
@@ -170,9 +158,9 @@ def show_menu():
         traceback.print_exc()
         return None
 
-    # Seçim istemi (Beyaz)
+    # Seçim istemi
     try:
-        choice = input(f"\n{W}Enter Your Option: {RESET}") # Örnekteki gibi
+        choice = input(f"\n{W}Enter Your Option: {RESET}")
         return choice
     except KeyboardInterrupt:
         print("\n\nÇıkış yapılıyor...")
@@ -183,9 +171,8 @@ def show_menu():
 
 def run_script(script_name):
     """Belirtilen Python betiğini çalıştırır (Menüyü temizleyerek)."""
-    # (run_script fonksiyonu öncekiyle aynı, buraya tekrar eklemiyorum)
-    # ... ( önceki cevaptaki run_script içeriği buraya gelecek ) ...
-
+    # (Bu fonksiyonun içeriği önceki cevaplardakiyle aynı kalabilir)
+    # ... (önceki cevaplardaki run_script içeriği) ...
     # Ekranı temizle
     clear_screen()
 
@@ -306,7 +293,6 @@ def run_script(script_name):
                      if not is_root:
                         print(f"{R}İpucu: Root yetkisi alamamış olabilirsiniz. Ana betiği 'sudo python3 {os.path.basename(__file__)}' ile çalıştırmayı deneyin.{RESET}")
 
-
         except FileNotFoundError:
             print(f"\n{R}{BRIGHT}HATA: Python yorumlayıcısı '{python_executable}' veya 'sudo' (gerekliyse) bulunamadı!{RESET}")
         except KeyboardInterrupt:
@@ -341,7 +327,7 @@ if __name__ == "__main__":
             time.sleep(3)
             break
 
-        # Script eşleştirmeleri (Numaralar güncellendi - IP Tool yok)
+        # Script eşleştirmeleri (Numaralar güncel)
         script_to_run = None
         if user_choice == '1': script_to_run = "call_bomb.py"
         elif user_choice == '2': script_to_run = "sms_bomb.py"
