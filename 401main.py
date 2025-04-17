@@ -7,7 +7,13 @@ import re
 import math
 
 # --- UYARI ---
-# (Uyarı metni öncekiyle aynı)
+# Bu araç seti çeşitli ağ ve güvenlik araçları içerir.
+# Bazı araçlar (Call/SMS Bomb, Jammer, DoS/DDoS, Bruteforce, SIM Clone, GPS Spoofer vb.)
+# yasa dışı amaçlarla kullanılır ise sorumluluk kullanıcınındır.
+# Bu araçların kullanımından doğacak tüm sorumluluk kullanıcıya aittir.
+# API'lere dayalı araçlar (Call Bomb, SMS Bomb, Link Kısaltıcı) zamanla çalışmaz hale gelebilir.
+# Bazı araçlar özel donanım, izinler (root), bağımlılıklar veya Termux API gerektirebilir.
+# Lütfen araçları kullanmadan önce README dosyasını okuyun.
 # --- UYARI SONU ---
 
 # Colorama import ve fallback mekanizması
@@ -33,7 +39,8 @@ except ImportError:
     class Back: pass
 
 
-# Banner - Tamamı Cyan, Bitişik Stil
+# Banner - Tamamı Cyan, Bitişik Stil, Sola Yaslı
+banner_padding = " " * 12 # Sabit sol boşluk
 banner_lines = [
     f"{C}{BRIGHT}██╗  ██╗ ██████╗  ██╗{RESET}",
     f"{C}{BRIGHT}██║  ██║██╔═████╗███║{RESET}",
@@ -45,16 +52,31 @@ banner_lines = [
 
 # Renk kodlarını temizleyen fonksiyon
 def strip_colors(s):
+    """ANSI renk/stil kodlarını string'den temizler."""
     return re.sub(r'\x1b\[[0-9;]*[mK]', '', str(s))
 
 def clear_screen():
+    """Ekranı temizler."""
     os.system('cls' if os.name == 'nt' else 'clear')
 
+# ==============================================================
+#       SHOW_MENU FONKSİYONU (er.jpg STİLİ - SON VERSİYON)
+# ==============================================================
 def show_menu():
-    """İstenilen stile (er.jpg) göre hassas hizalamalı menü."""
+    """(er.jpg) stiline göre birebir menü (Cyan Banner, Açıklamasız, Sola Yaslı)."""
     clear_screen()
 
-    # Menü Öğeleri (Açıklamasız)
+    # --- Banner ve Alt Başlıkları Yazdır (Sola Yaslı) ---
+    print()
+    for line in banner_lines:
+        print(f"{banner_padding}{line}")
+
+    sub_padding = banner_padding + "   " # Banner'dan biraz içeride
+    print(f"{sub_padding}{G}{BRIGHT}by 401HackTeam{RESET}")
+    print(f"{sub_padding}{Y}Version: 1.1{RESET}")
+    print()
+
+    # --- Menü Öğeleri (Açıklamasız Liste) ---
     menu_items = {
         '1': "Call Bomb", '2': "SMS Bomb", '3': "DoS Saldırısı", '4': "Yedek DDoS",
         '5': "Base64 Decode", '6': "Chromecast Hack", '7': "Web Saldırı", '8': "Instagram Araçları",
@@ -66,83 +88,83 @@ def show_menu():
     }
 
     try:
-        # --- Sabit Genişlik ve Sütun Ayarları ---
-        menu_width = 76 # Sabit toplam genişlik (ayarlanabilir)
-        # İç genişlik: Kenarlar | ve 1 boşluk sağ/sol için 4 karakter çıkar (| item item |)
-        inner_content_width = menu_width - 4
-        col_spacing = 4 # Sütunlar arası boşluk
-        # Her sütun için içerik genişliğini hesapla
-        col_width = (inner_content_width - col_spacing) // 2
-        # Kalan boşluğu ikinci sütuna ekleyelim (kusurat olursa)
-        col2_extra_width = inner_content_width - (col_width * 2) - col_spacing
+        # --- Düzen Hesaplamaları ---
+        menu_items_list = list(menu_items.items())
+        num_items = len(menu_items_list)
+        num_cols = 2
+        num_rows = math.ceil(num_items / num_cols)
 
-        # --- Banner ve Alt Başlıkları Ortala ---
-        print()
-        for line in banner_lines:
-            line_plain_len = len(strip_colors(line))
-            padding_len = max(0, (menu_width - line_plain_len) // 2)
-            print(f"{' ' * padding_len}{line}")
+        # Sütun 1 için maksimum genişliği hesapla ("XX. İsim" formatında)
+        max_col1_width = 0
+        for i in range(num_rows):
+            idx1 = i * 2
+            if idx1 < num_items:
+                key1 = str(idx1 + 1)
+                value1 = menu_items.get(key1, "")
+                item_str_plain = f"{key1.rjust(2)}. {value1}"
+                max_col1_width = max(max_col1_width, len(item_str_plain))
 
-        sub_head1 = f"{G}{BRIGHT}by 401HackTeam{RESET}"
-        sub_head1_len = len(strip_colors(sub_head1))
-        padding1 = max(0, (menu_width - sub_head1_len) // 2)
-        print(f"{' ' * padding1}{sub_head1}")
+        # Sütun 2 için maksimum genişliği hesapla
+        max_col2_width = 0
+        for i in range(num_rows):
+            idx2 = i * 2 + 1
+            if idx2 < num_items:
+                key2 = str(idx2 + 1)
+                value2 = menu_items.get(key2, "")
+                item_str_plain = f"{key2.rjust(2)}. {value2}"
+                max_col2_width = max(max_col2_width, len(item_str_plain))
 
-        sub_head2 = f"{Y}Version: 1.1{RESET}"
-        sub_head2_len = len(strip_colors(sub_head2))
-        padding2 = max(0, (menu_width - sub_head2_len) // 2)
-        print(f"{' ' * padding2}{sub_head2}")
-        print()
+        col_spacing = 4 # Sütunlar arası sabit boşluk
+
+        # İçeriğin sığacağı toplam genişlik (sütunlar + aradaki boşluk)
+        inner_width = max_col1_width + col_spacing + max_col2_width
+        # Çerçevenin toplam genişliği (| Boşluk İçerik Boşluk |)
+        menu_width = inner_width + 4
 
         # --- Basit Kutu ve İçerik Çizimi (Hassas Padding) ---
         print(f"{C}{'-' * menu_width}{RESET}") # Üst kenar
 
-        menu_items_list = list(menu_items.items())
-        num_items = len(menu_items_list)
-        num_rows = math.ceil(num_items / 2)
-
         for i in range(num_rows):
-            # Sol Sütun Öğesi
+            # --- Sol Sütun Öğesi ---
             idx1 = i * 2
-            item1_formatted = ""
+            item1_text_padded = "" # İçerik + padding
             if idx1 < num_items:
                 key1 = str(idx1 + 1)
                 value1 = menu_items.get(key1, "")
-                # Renkli öğeyi oluştur
+                # Renkli formatla
                 item1_colored = f"{W}{key1.rjust(2)}.{C} {value1}{RESET}"
                 item1_plain_len = len(strip_colors(item1_colored))
-                # Sabit sütun genişliğine tamamla
-                padding = ' ' * max(0, col_width - item1_plain_len)
-                item1_formatted = item1_colored + padding
+                # Sağa boşluk ekleyerek max_col1_width'e tamamla
+                padding = ' ' * max(0, max_col1_width - item1_plain_len)
+                item1_text_padded = item1_colored + padding
             else:
-                item1_formatted = ' ' * col_width # Boşsa sütunu doldur
+                item1_text_padded = ' ' * max_col1_width # Boşsa sütunu doldur
 
-            # Sağ Sütun Öğesi
+            # --- Sağ Sütun Öğesi ---
             idx2 = i * 2 + 1
-            item2_formatted = ""
-            # İkinci sütunun genişliğini hesapla (küsurat içerebilir)
-            current_col2_width = col_width + col2_extra_width
+            item2_text_padded = "" # İçerik + padding
             if idx2 < num_items:
                  key2 = str(idx2 + 1)
                  value2 = menu_items.get(key2, "")
                  item2_colored = f"{W}{key2.rjust(2)}.{C} {value2}{RESET}"
                  item2_plain_len = len(strip_colors(item2_colored))
-                 # Sabit sütun genişliğine tamamla
-                 padding = ' ' * max(0, current_col2_width - item2_plain_len)
-                 item2_formatted = item2_colored + padding
+                 # Sağa boşluk ekleyerek max_col2_width'e tamamla
+                 padding = ' ' * max(0, max_col2_width - item2_plain_len)
+                 item2_text_padded = item2_colored + padding
             else:
-                 item2_formatted = ' ' * current_col2_width # Boşsa sütunu doldur
+                 item2_text_padded = ' ' * max_col2_width # Boşsa sütunu doldur
 
-            # Satırı yazdır: | boşluk Sütun1 boşluk Sütun2 boşluk |
-            print(f"{C}| {RESET}{item1_formatted}{' ' * col_spacing}{item2_formatted} {C}|{RESET}")
+            # --- Satırı Yazdır ---
+            # | boşluk Sütun1(Dolu) boşluk(Sabit) Sütun2(Dolu) boşluk |
+            print(f"{C}| {RESET}{item1_text_padded}{' ' * col_spacing}{item2_text_padded} {C}|{RESET}")
 
-        # Ayırıcı ve Çıkış
+        # --- Ayırıcı ve Çıkış ---
         print(f"{C}{'-' * menu_width}{RESET}")
 
         exit_text_colored = f"{W} 0. {R}Çıkış{RESET}" # Beyaz No, Kırmızı Metin
         exit_plain_len = len(strip_colors(exit_text_colored))
-        # Çıkışı sola yasla ve iç genişliğe tamamla
-        final_padding_exit = ' ' * max(0, inner_content_width - exit_plain_len)
+        # Sola yasla ve iç genişliğe tamamla (sağdaki boşlukları ekle)
+        final_padding_exit = ' ' * max(0, inner_width - exit_plain_len)
         print(f"{C}| {RESET}{exit_text_colored}{final_padding_exit} {C}|{RESET}")
 
         print(f"{C}{'-' * menu_width}{RESET}") # Alt
@@ -154,7 +176,7 @@ def show_menu():
         traceback.print_exc()
         return None
 
-    # Seçim istemi
+    # --- Seçim İstemi ---
     try:
         choice = input(f"\n{W}Enter Your Option: {RESET}") # Örnekteki gibi istem
         return choice
@@ -164,10 +186,12 @@ def show_menu():
     except Exception as e:
         print(f"\n{R}GİRİŞ HATASI:{RESET} {e}")
         return None
+# ==============================================================
+#               SHOW_MENU FONKSİYONU BİTİŞİ
+# ==============================================================
 
 def run_script(script_name):
     """Belirtilen Python betiğini çalıştırır (Menüyü temizleyerek)."""
-    # (Bu fonksiyonun içeriği önceki cevaplardakiyle aynı kalabilir)
     # Ekranı temizle
     clear_screen()
 
@@ -196,7 +220,7 @@ def run_script(script_name):
     script_cancelled = False
     requires_root = False # Bazı scriptler root gerektirebilir
 
-    # --- YASAL UYARILAR ve ÖN KONTROLLER ---
+    # --- YASAL UYARILAR ve ÖN KONTROLLER (Kullanıcı bilgilendirme için önemli) ---
     if script_name == "netflix_checker.py": # Gerçi bu kaldırıldı ama yine de dursun
          print(f"{R}{BRIGHT}UYARI:{Y} Netflix Checker kullanım dışıdır ve çalışmayacaktır.{RESET}")
          time.sleep(3)
@@ -258,10 +282,9 @@ def run_script(script_name):
             command = []
             # Root gerektiren scriptler için sudo ekle (Linux/macOS)
             if requires_root and os.name != 'nt':
-                 # Check if already root
                  try:
                      is_root = (os.geteuid() == 0)
-                 except AttributeError: # Windows'ta geteuid yok
+                 except AttributeError:
                      is_root = False
 
                  if not is_root:
@@ -270,10 +293,9 @@ def run_script(script_name):
                  else:
                      print(f"{C}Zaten root olarak çalıştırılıyor.{RESET}")
 
-            command.extend([python_executable, script_path]) # script_path tam yolu içeriyor
+            command.extend([python_executable, script_path])
 
-            # subprocess.run kullanarak betiği çalıştır
-            process = subprocess.run(command, check=False, text=True, capture_output=False) # capture_output=False stdout/stderr doğrudan görünsün
+            process = subprocess.run(command, check=False, text=True, capture_output=False)
 
             if process.returncode == 0:
                  print(f"\n{G}{BRIGHT}--- '{script_name}' işlemi normal şekilde tamamlandı (Çıkış Kodu: 0) ---{RESET}")
@@ -288,7 +310,6 @@ def run_script(script_name):
                      if not is_root:
                         print(f"{R}İpucu: Root yetkisi alamamış olabilirsiniz. Ana betiği 'sudo python3 {os.path.basename(__file__)}' ile çalıştırmayı deneyin.{RESET}")
 
-
         except FileNotFoundError:
             print(f"\n{R}{BRIGHT}HATA: Python yorumlayıcısı '{python_executable}' veya 'sudo' (gerekliyse) bulunamadı!{RESET}")
         except KeyboardInterrupt:
@@ -299,7 +320,7 @@ def run_script(script_name):
             import traceback
             traceback.print_exc()
 
-    # Her betik çağrısından sonra ana menüye dönmeden önce bekle
+    # Ana menüye dönmek için bekle
     print(f"\n{Y}Ana menüye dönmek için Enter tuşuna basın...{RESET}")
     try:
         input()
@@ -316,7 +337,7 @@ if __name__ == "__main__":
         pass # Uyarı zaten verildi
 
     while True:
-        user_choice = show_menu()
+        user_choice = show_menu() # Güncellenmiş menü fonksiyonunu çağır
 
         if user_choice is None:
             print(f"{R}Menü gösterilirken veya giriş alınırken bir hata oluştu, program sonlandırılıyor.{RESET}")
