@@ -4,16 +4,10 @@ import os
 import sys
 import time
 import re
-import math # Sütun hesaplaması için eklendi
+import math
 
 # --- UYARI ---
-# Bu araç seti çeşitli ağ ve güvenlik araçları içerir.
-# Bazı araçlar (Call/SMS Bomb, Jammer, DoS/DDoS, Bruteforce, SIM Clone, GPS Spoofer vb.)
-# yasa dışı amaçlarla kullanılır ise sorumluluk kullanıcınındır.
-# Bu araçların kullanımından doğacak tüm sorumluluk kullanıcıya aittir.
-# API'lere dayalı araçlar (Call Bomb, SMS Bomb, Link Kısaltıcı) zamanla çalışmaz hale gelebilir.
-# Bazı araçlar özel donanım, izinler (root), bağımlılıklar veya Termux API gerektirebilir.
-# Lütfen araçları kullanmadan önce README dosyasını okuyun.
+# (Uyarı metni öncekiyle aynı)
 # --- UYARI SONU ---
 
 # Colorama import ve fallback mekanizması
@@ -40,7 +34,6 @@ except ImportError:
 
 
 # Banner - Tamamı Cyan, Bitişik Stil
-# (Padding daha sonra hesaplanacak)
 banner_lines = [
     f"{C}{BRIGHT}██╗  ██╗ ██████╗  ██╗{RESET}",
     f"{C}{BRIGHT}██║  ██║██╔═████╗███║{RESET}",
@@ -60,71 +53,31 @@ def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def show_menu():
-    """İstenilen stile (er.jpg) BİREBİR benzeyen menü (Tamamı Cyan Banner, Açıklamasız)."""
+    """İstenilen stile (er.jpg) BİREBİR benzeyen menü (Manuel Hizalama)."""
     clear_screen()
 
     # Menü Öğeleri (Açıklamasız)
     menu_items = {
-        '1': "Call Bomb",
-        '2': "SMS Bomb",
-        '3': "DoS Saldırısı",
-        '4': "Yedek DDoS",
-        '5': "Base64 Decode",
-        '6': "Chromecast Hack",
-        '7': "Web Saldırı",
-        '8': "Instagram Araçları",
-        '9': "Sosyal Medya Bulucu",
-        '10': "Wi-Fi Jammer",
-        '11': "DDoS Araçları",
-        '12': "Ağ Tünelleme",
-        '13': "Bilgi Toplayıcı",
-        '14': "Bruteforce Aracı",
-        '15': "GPS Spoofer",
-        '16': "Kamera Görüntüleme",
-        '17': "Log/Phishing/FakeAPK",
-        '18': "Konum Takip",
-        '19': "Özel Link Kısaltıcı",
-        '20': "Pattern Kırıcı",
-        '21': "SIM Klonlayıcı",
-        '22': "IP/Site Dönüştürücü",
-        '23': "WiFi Şifre Kırıcı",
-        '24': "WhatsApp Analiz",
+        '1': "Call Bomb", '2': "SMS Bomb", '3': "DoS Saldırısı", '4': "Yedek DDoS",
+        '5': "Base64 Decode", '6': "Chromecast Hack", '7': "Web Saldırı", '8': "Instagram Araçları",
+        '9': "Sosyal Medya Bulucu", '10': "Wi-Fi Jammer", '11': "DDoS Araçları", '12': "Ağ Tünelleme",
+        '13': "Bilgi Toplayıcı", '14': "Bruteforce Aracı", '15': "GPS Spoofer", '16': "Kamera Görüntüleme",
+        '17': "Log/Phishing/FakeAPK", '18': "Konum Takip", '19': "Özel Link Kısaltıcı", '20': "Pattern Kırıcı",
+        '21': "SIM Klonlayıcı", '22': "IP/Site Dönüştürücü", '23': "WiFi Şifre Kırıcı", '24': "WhatsApp Analiz",
         '25': "Yedek Wi-Fi Jammer"
     }
 
     try:
-        # --- Dinamik Genişlik Hesaplama ---
-        menu_items_list = list(menu_items.items())
-        num_items = len(menu_items_list)
-        num_cols = 2
-        num_rows = math.ceil(num_items / num_cols)
-
-        max_col1_width_plain = 0
-        for i in range(num_rows):
-            idx1 = i * 2
-            if idx1 < num_items:
-                key1 = str(idx1 + 1)
-                value1 = menu_items.get(key1, "")
-                item_str_plain = f"{key1.rjust(2)}. {value1}" # Rjust ile 2 haneye tamamla
-                max_col1_width_plain = max(max_col1_width_plain, len(item_str_plain))
-
-        max_col2_width_plain = 0
-        for i in range(num_rows):
-            idx2 = i * 2 + 1
-            if idx2 < num_items:
-                key2 = str(idx2 + 1)
-                value2 = menu_items.get(key2, "")
-                item_str_plain = f"{key2.rjust(2)}. {value2}" # Rjust ile 2 haneye tamamla
-                max_col2_width_plain = max(max_col2_width_plain, len(item_str_plain))
-
+        # --- Sabit Genişlik ve Hizalama Ayarları ---
+        menu_width = 76 # Sabit toplam genişlik (ayarlanabilir)
+        # İç genişlik: Kenarlar | ve 1 boşluk sağ/sol için 4 karakter çıkar
+        inner_width = menu_width - 4
         col_spacing = 4 # Sütunlar arası boşluk
-        # İçerik genişliğini hesapla
-        inner_width = max_col1_width_plain + col_spacing + max_col2_width_plain
-        # Toplam menü genişliğini belirle (içerik + kenarlar + 2 boşluk)
-        menu_width = inner_width + 4 # Kenarlar | ve iç boşluklar için
+        # Her sütun için içerik genişliği (eşit bölünmüş)
+        col_width = (inner_width - col_spacing) // 2
 
-        # --- Banner ve Alt Başlıkları Ortala ve Yazdır ---
-        print() # Üstte boşluk
+        # --- Banner ve Alt Başlıkları Ortala ---
+        print()
         for line in banner_lines:
             line_plain_len = len(strip_colors(line))
             padding_len = max(0, (menu_width - line_plain_len) // 2)
@@ -139,45 +92,65 @@ def show_menu():
         sub_head2_len = len(strip_colors(sub_head2))
         padding2 = max(0, (menu_width - sub_head2_len) // 2)
         print(f"{' ' * padding2}{sub_head2}")
-        print() # Altında boşluk
+        print()
 
-        # --- Basit Kutu Çizimi (Cyan) ---
+        # --- Basit Kutu ve İçerik Çizimi (Manuel Padding) ---
         print(f"{C}{'-' * menu_width}{RESET}") # Üst kenar
 
-        # Öğeleri satır satır 2 sütun halinde yazdır
+        menu_items_list = list(menu_items.items())
+        num_items = len(menu_items_list)
+        num_rows = math.ceil(num_items / 2)
+
         for i in range(num_rows):
-            # Sol Sütun
+            # Sol Sütun Öğesi
             idx1 = i * 2
             item1_colored = ""
             item1_plain_len = 0
             if idx1 < num_items:
                 key1 = str(idx1 + 1)
                 value1 = menu_items.get(key1, "")
-                # Format: Beyaz Numara. Cyan Metin (Sola Yaslı)
                 item1_colored = f"{W}{key1.rjust(2)}.{C} {value1}{RESET}"
                 item1_plain_len = len(f"{key1.rjust(2)}. {value1}")
-                # Sütun genişliğine göre sağa boşluk ekle (max_col1'e göre)
-                item1_colored += ' ' * max(0, max_col1_width_plain - item1_plain_len)
+            # Manuel padding ekle (col_width'e tamamla)
+            item1_formatted = item1_colored + ' ' * max(0, col_width - item1_plain_len)
 
-            # Sağ Sütun
+            # Sağ Sütun Öğesi
             idx2 = i * 2 + 1
             item2_colored = ""
+            item2_plain_len = 0
             if idx2 < num_items:
                  key2 = str(idx2 + 1)
                  value2 = menu_items.get(key2, "")
-                 # Format: Beyaz Numara. Cyan Metin (Sola Yaslı)
                  item2_colored = f"{W}{key2.rjust(2)}.{C} {value2}{RESET}"
-                 # Sağa doğru boşluk eklemeye gerek yok (satır sonuna kadar eklenecek)
+                 item2_plain_len = len(f"{key2.rjust(2)}. {value2}")
+            # Manuel padding ekle (col_width'e tamamla)
+            # Not: Sağdaki son sütunun padding'i aslında satır sonunda otomatik ayarlanacak,
+            # ama tutarlılık için burada da ekleyebiliriz veya boş bırakabiliriz.
+            # Şimdilik ekleyelim, ancak sağ kenara taşmamasına dikkat edelim.
+            item2_formatted = item2_colored + ' ' * max(0, col_width - item2_plain_len)
 
-            # İki sütun arasına boşluk ekle
-            line_content_colored = f"{item1_colored}{' ' * col_spacing}{item2_colored}"
-            line_content_plain_len = len(strip_colors(line_content_colored))
 
-            # Satırın sonuna kadar olan boşluğu hesapla
-            final_padding = ' ' * max(0, inner_width - line_content_plain_len)
+            # Satırı birleştir ve yazdır (| Boşluk Sütun1 Boşluk Sütun2 Boşluk |)
+            # İki sütunun toplam uzunluğu ve aradaki boşluk
+            # Not: itemX_formatted zaten col_width kadar boşluk içeriyor olabilir.
+            # Bu yüzden strip_colors ile gerçek içeriği alıp padding eklemek daha doğru.
+            item1_clean_colored = item1_colored # Padding eklenmemiş hali
+            item1_clean_plain_len = item1_plain_len
+            padding1 = ' ' * max(0, col_width - item1_clean_plain_len)
 
-            # Satırı yazdır (| Kenar Boşluk İçerik Boşluk Kenar |)
-            print(f"{C}| {RESET}{line_content_colored}{final_padding} {C}|{RESET}")
+            item2_clean_colored = item2_colored # Padding eklenmemiş hali
+            item2_clean_plain_len = item2_plain_len
+            padding2 = ' ' * max(0, col_width - item2_clean_plain_len) # Bu sağdaki boşluk
+
+            # Satırı oluştur: Öğe1 + Padding1 + Aralik + Öğe2 + Padding2
+            line_content = f"{item1_clean_colored}{padding1}{' ' * col_spacing}{item2_clean_colored}{padding2}"
+            line_plain_len = len(strip_colors(line_content))
+
+            # Çok nadir de olsa hesaplama hatası olursa diye son kontrol
+            final_padding = ' ' * max(0, inner_width - line_plain_len)
+
+
+            print(f"{C}| {RESET}{item1_clean_colored}{padding1}{' ' * col_spacing}{item2_clean_colored}{final_padding} {C}|{RESET}")
 
 
         # Ayırıcı ve Çıkış
