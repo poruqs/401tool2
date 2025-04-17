@@ -43,17 +43,15 @@ banner_lines = [
     f"{C}{BRIGHT}     ╚═╝ ╚═════╝  ╚═╝{RESET}"
 ]
 
-# Renk kodlarını temizleyen fonksiyon (hizalama için)
+# Renk kodlarını temizleyen fonksiyon
 def strip_colors(s):
-    """ANSI renk/stil kodlarını string'den temizler."""
     return re.sub(r'\x1b\[[0-9;]*[mK]', '', str(s))
 
 def clear_screen():
-    """Ekranı temizler."""
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def show_menu():
-    """İstenilen stile (er.jpg) BİREBİR benzeyen menü (Manuel Hizalama)."""
+    """İstenilen stile (er.jpg) göre hassas hizalamalı menü."""
     clear_screen()
 
     # Menü Öğeleri (Açıklamasız)
@@ -68,13 +66,15 @@ def show_menu():
     }
 
     try:
-        # --- Sabit Genişlik ve Hizalama Ayarları ---
+        # --- Sabit Genişlik ve Sütun Ayarları ---
         menu_width = 76 # Sabit toplam genişlik (ayarlanabilir)
-        # İç genişlik: Kenarlar | ve 1 boşluk sağ/sol için 4 karakter çıkar
-        inner_width = menu_width - 4
+        # İç genişlik: Kenarlar | ve 1 boşluk sağ/sol için 4 karakter çıkar (| item item |)
+        inner_content_width = menu_width - 4
         col_spacing = 4 # Sütunlar arası boşluk
-        # Her sütun için içerik genişliği (eşit bölünmüş)
-        col_width = (inner_width - col_spacing) // 2
+        # Her sütun için içerik genişliğini hesapla
+        col_width = (inner_content_width - col_spacing) // 2
+        # Kalan boşluğu ikinci sütuna ekleyelim (kusurat olursa)
+        col2_extra_width = inner_content_width - (col_width * 2) - col_spacing
 
         # --- Banner ve Alt Başlıkları Ortala ---
         print()
@@ -94,7 +94,7 @@ def show_menu():
         print(f"{' ' * padding2}{sub_head2}")
         print()
 
-        # --- Basit Kutu ve İçerik Çizimi (Manuel Padding) ---
+        # --- Basit Kutu ve İçerik Çizimi (Hassas Padding) ---
         print(f"{C}{'-' * menu_width}{RESET}") # Üst kenar
 
         menu_items_list = list(menu_items.items())
@@ -104,62 +104,45 @@ def show_menu():
         for i in range(num_rows):
             # Sol Sütun Öğesi
             idx1 = i * 2
-            item1_colored = ""
-            item1_plain_len = 0
+            item1_formatted = ""
             if idx1 < num_items:
                 key1 = str(idx1 + 1)
                 value1 = menu_items.get(key1, "")
+                # Renkli öğeyi oluştur
                 item1_colored = f"{W}{key1.rjust(2)}.{C} {value1}{RESET}"
-                item1_plain_len = len(f"{key1.rjust(2)}. {value1}")
-            # Manuel padding ekle (col_width'e tamamla)
-            item1_formatted = item1_colored + ' ' * max(0, col_width - item1_plain_len)
+                item1_plain_len = len(strip_colors(item1_colored))
+                # Sabit sütun genişliğine tamamla
+                padding = ' ' * max(0, col_width - item1_plain_len)
+                item1_formatted = item1_colored + padding
+            else:
+                item1_formatted = ' ' * col_width # Boşsa sütunu doldur
 
             # Sağ Sütun Öğesi
             idx2 = i * 2 + 1
-            item2_colored = ""
-            item2_plain_len = 0
+            item2_formatted = ""
+            # İkinci sütunun genişliğini hesapla (küsurat içerebilir)
+            current_col2_width = col_width + col2_extra_width
             if idx2 < num_items:
                  key2 = str(idx2 + 1)
                  value2 = menu_items.get(key2, "")
                  item2_colored = f"{W}{key2.rjust(2)}.{C} {value2}{RESET}"
-                 item2_plain_len = len(f"{key2.rjust(2)}. {value2}")
-            # Manuel padding ekle (col_width'e tamamla)
-            # Not: Sağdaki son sütunun padding'i aslında satır sonunda otomatik ayarlanacak,
-            # ama tutarlılık için burada da ekleyebiliriz veya boş bırakabiliriz.
-            # Şimdilik ekleyelim, ancak sağ kenara taşmamasına dikkat edelim.
-            item2_formatted = item2_colored + ' ' * max(0, col_width - item2_plain_len)
+                 item2_plain_len = len(strip_colors(item2_colored))
+                 # Sabit sütun genişliğine tamamla
+                 padding = ' ' * max(0, current_col2_width - item2_plain_len)
+                 item2_formatted = item2_colored + padding
+            else:
+                 item2_formatted = ' ' * current_col2_width # Boşsa sütunu doldur
 
-
-            # Satırı birleştir ve yazdır (| Boşluk Sütun1 Boşluk Sütun2 Boşluk |)
-            # İki sütunun toplam uzunluğu ve aradaki boşluk
-            # Not: itemX_formatted zaten col_width kadar boşluk içeriyor olabilir.
-            # Bu yüzden strip_colors ile gerçek içeriği alıp padding eklemek daha doğru.
-            item1_clean_colored = item1_colored # Padding eklenmemiş hali
-            item1_clean_plain_len = item1_plain_len
-            padding1 = ' ' * max(0, col_width - item1_clean_plain_len)
-
-            item2_clean_colored = item2_colored # Padding eklenmemiş hali
-            item2_clean_plain_len = item2_plain_len
-            padding2 = ' ' * max(0, col_width - item2_clean_plain_len) # Bu sağdaki boşluk
-
-            # Satırı oluştur: Öğe1 + Padding1 + Aralik + Öğe2 + Padding2
-            line_content = f"{item1_clean_colored}{padding1}{' ' * col_spacing}{item2_clean_colored}{padding2}"
-            line_plain_len = len(strip_colors(line_content))
-
-            # Çok nadir de olsa hesaplama hatası olursa diye son kontrol
-            final_padding = ' ' * max(0, inner_width - line_plain_len)
-
-
-            print(f"{C}| {RESET}{item1_clean_colored}{padding1}{' ' * col_spacing}{item2_clean_colored}{final_padding} {C}|{RESET}")
-
+            # Satırı yazdır: | boşluk Sütun1 boşluk Sütun2 boşluk |
+            print(f"{C}| {RESET}{item1_formatted}{' ' * col_spacing}{item2_formatted} {C}|{RESET}")
 
         # Ayırıcı ve Çıkış
         print(f"{C}{'-' * menu_width}{RESET}")
 
         exit_text_colored = f"{W} 0. {R}Çıkış{RESET}" # Beyaz No, Kırmızı Metin
         exit_plain_len = len(strip_colors(exit_text_colored))
-        # Çıkışı sola yasla ve sona kadar boşluk ekle
-        final_padding_exit = ' ' * max(0, inner_width - exit_plain_len)
+        # Çıkışı sola yasla ve iç genişliğe tamamla
+        final_padding_exit = ' ' * max(0, inner_content_width - exit_plain_len)
         print(f"{C}| {RESET}{exit_text_colored}{final_padding_exit} {C}|{RESET}")
 
         print(f"{C}{'-' * menu_width}{RESET}") # Alt
@@ -185,7 +168,6 @@ def show_menu():
 def run_script(script_name):
     """Belirtilen Python betiğini çalıştırır (Menüyü temizleyerek)."""
     # (Bu fonksiyonun içeriği önceki cevaplardakiyle aynı kalabilir)
-    # ... (önceki cevaplardaki run_script içeriği) ...
     # Ekranı temizle
     clear_screen()
 
