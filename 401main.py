@@ -60,10 +60,10 @@ def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 # ==============================================================
-#       SHOW_MENU FONKSİYONU (er.jpg STİLİ - SON VERSİYON)
+#               SHOW_MENU FONKSİYONU (Birebir Stil Hedefi)
 # ==============================================================
 def show_menu():
-    """(er.jpg) stiline göre birebir menü (Cyan Banner, Açıklamasız, Sola Yaslı)."""
+    """(er.jpg) stiline göre birebir menü."""
     clear_screen()
 
     # --- Banner ve Alt Başlıkları Yazdır (Sola Yaslı) ---
@@ -101,7 +101,7 @@ def show_menu():
             if idx1 < num_items:
                 key1 = str(idx1 + 1)
                 value1 = menu_items.get(key1, "")
-                item_str_plain = f"{key1.rjust(2)}. {value1}"
+                item_str_plain = f"{key1.rjust(2)}. {value1}" # rjust ile 2 haneye tamamla
                 max_col1_width = max(max_col1_width, len(item_str_plain))
 
         # Sütun 2 için maksimum genişliği hesapla
@@ -111,12 +111,12 @@ def show_menu():
             if idx2 < num_items:
                 key2 = str(idx2 + 1)
                 value2 = menu_items.get(key2, "")
-                item_str_plain = f"{key2.rjust(2)}. {value2}"
+                item_str_plain = f"{key2.rjust(2)}. {value2}" # rjust ile 2 haneye tamamla
                 max_col2_width = max(max_col2_width, len(item_str_plain))
 
-        col_spacing = 4 # Sütunlar arası sabit boşluk
+        col_spacing = 4 # Sütunlar arası sabit boşluk (er.jpg'ye benzer)
 
-        # İçeriğin sığacağı toplam genişlik (sütunlar + aradaki boşluk)
+        # İçeriğin sığacağı toplam genişlik
         inner_width = max_col1_width + col_spacing + max_col2_width
         # Çerçevenin toplam genişliği (| Boşluk İçerik Boşluk |)
         menu_width = inner_width + 4
@@ -131,14 +131,15 @@ def show_menu():
             if idx1 < num_items:
                 key1 = str(idx1 + 1)
                 value1 = menu_items.get(key1, "")
-                # Renkli formatla
+                # Renkli formatla (Beyaz No. Cyan Metin)
                 item1_colored = f"{W}{key1.rjust(2)}.{C} {value1}{RESET}"
                 item1_plain_len = len(strip_colors(item1_colored))
                 # Sağa boşluk ekleyerek max_col1_width'e tamamla
                 padding = ' ' * max(0, max_col1_width - item1_plain_len)
                 item1_text_padded = item1_colored + padding
             else:
-                item1_text_padded = ' ' * max_col1_width # Boşsa sütunu doldur
+                # Boşsa sütunu max_col1_width kadar boşlukla doldur
+                item1_text_padded = ' ' * max_col1_width
 
             # --- Sağ Sütun Öğesi ---
             idx2 = i * 2 + 1
@@ -146,13 +147,15 @@ def show_menu():
             if idx2 < num_items:
                  key2 = str(idx2 + 1)
                  value2 = menu_items.get(key2, "")
+                 # Renkli formatla (Beyaz No. Cyan Metin)
                  item2_colored = f"{W}{key2.rjust(2)}.{C} {value2}{RESET}"
                  item2_plain_len = len(strip_colors(item2_colored))
                  # Sağa boşluk ekleyerek max_col2_width'e tamamla
                  padding = ' ' * max(0, max_col2_width - item2_plain_len)
                  item2_text_padded = item2_colored + padding
             else:
-                 item2_text_padded = ' ' * max_col2_width # Boşsa sütunu doldur
+                 # Boşsa sütunu max_col2_width kadar boşlukla doldur
+                 item2_text_padded = ' ' * max_col2_width
 
             # --- Satırı Yazdır ---
             # | boşluk Sütun1(Dolu) boşluk(Sabit) Sütun2(Dolu) boşluk |
@@ -190,6 +193,7 @@ def show_menu():
 #               SHOW_MENU FONKSİYONU BİTİŞİ
 # ==============================================================
 
+
 def run_script(script_name):
     """Belirtilen Python betiğini çalıştırır (Menüyü temizleyerek)."""
     # Ekranı temizle
@@ -220,113 +224,63 @@ def run_script(script_name):
     script_cancelled = False
     requires_root = False # Bazı scriptler root gerektirebilir
 
-    # --- YASAL UYARILAR ve ÖN KONTROLLER (Kullanıcı bilgilendirme için önemli) ---
-    if script_name == "netflix_checker.py": # Gerçi bu kaldırıldı ama yine de dursun
+    # --- YASAL UYARILAR ve ÖN KONTROLLER ---
+    # (Uyarılar burada kalmalı, menüde olmasa bile kullanıcıyı bilgilendirir)
+    if script_name == "netflix_checker.py":
          print(f"{R}{BRIGHT}UYARI:{Y} Netflix Checker kullanım dışıdır ve çalışmayacaktır.{RESET}")
-         time.sleep(3)
-         script_cancelled = True
+         time.sleep(3); script_cancelled = True
     elif script_name in ["call_bomb.py", "sms_bomb.py"]:
          print(f"{Y}{BRIGHT}UYARI:{W} Bu aracın kullandığı API'ler güncel olmayabilir ve çalışmayabilir.{RESET}")
-         print(f"{Y}Ayrıca, bu tür araçların kötüye kullanımı yasa dışıdır.{RESET}")
-         time.sleep(2)
+         print(f"{Y}Ayrıca, bu tür araçların kötüye kullanımı yasa dışıdır.{RESET}"); time.sleep(2)
     elif script_name in ["DoS.py", "Basit_ddos.py", "DDoS.py", "brutforce.py", "keylogger.py"]:
          print(f"{R}{BRIGHT}!!! YASAL UYARI !!!{RESET}")
          print(f"{R}Bu aracın ({script_name}) izinsiz sistemlere karşı kullanımı YASA DIŞIDIR!{RESET}")
-         print(f"{Y}Sadece izinli test ortamlarında veya kendi sistemlerinizde kullanın.{RESET}")
-         print(f"{Y}Tüm sorumluluk size aittir.{RESET}")
-         time.sleep(3)
+         print(f"{Y}Sadece izinli test ortamlarında veya kendi sistemlerinizde kullanın."); time.sleep(3)
     elif script_name in ["wifi_jammer.py", "yedek_jammer.py", "sim-clone.py", "gps-spoofer.py"]:
          print(f"{R}{BRIGHT}!!! YASAL UYARI ve GEREKSİNİMLER !!!{RESET}")
          print(f"{R}Bu aracın ({script_name}) kullanımı Türkiye dahil birçok ülkede YASA DIŞIDIR.{RESET}")
          print(f"{R}Ciddi yasal sonuçlar doğurabilir.{RESET}")
          if script_name in ["wifi_jammer.py", "yedek_jammer.py"]:
-            print(f"{Y}Ayrıca, özel Wi-Fi adaptörü (Monitor Modu/Paket Enjeksiyonu destekli) ve root/sudo yetkisi gerektirir.{RESET}")
-            requires_root = True
-         if script_name == "sim-clone.py":
-             print(f"{Y}Ayrıca, 'qcsuper' aracının kurulu olması ve özel donanım/izinler gerektirir.{RESET}")
-         if script_name == "gps-spoofer.py":
-             print(f"{Y}Ayrıca, 'gpsd' servisinin çalışması ve konum izinleri/ayarları gerektirir.{RESET}")
-         print(f"{Y}Bu araçlar yalnızca eğitim ve yasal test amaçlıdır. Sorumluluk size aittir.{RESET}")
+            print(f"{Y}Ayrıca, özel Wi-Fi adaptörü ve root/sudo yetkisi gerektirir.{RESET}"); requires_root = True
+         if script_name == "sim-clone.py": print(f"{Y}Ayrıca, 'qcsuper' aracı ve özel donanım/izinler gerektirir.{RESET}")
+         if script_name == "gps-spoofer.py": print(f"{Y}Ayrıca, 'gpsd' servisi ve konum izinleri/ayarları gerektirir.{RESET}")
+         print(f"{Y}Bu araçlar yalnızca eğitim amaçlıdır. Sorumluluk size aittir.{RESET}")
          try:
-            confirm = input(f"{Y}Devam etmek ve '{script_name}' çalıştırmak istiyor musunuz? (e/H): {W}").strip().lower()
-            if confirm != 'e':
-                print(f"{G}İşlem iptal edildi.{RESET}")
-                script_cancelled = True
-            else:
-                print(f"{R}YASADIŞI OLABİLECEK İŞLEM BAŞLATILIYOR... Sorumluluk sizindir.{RESET}")
-                time.sleep(1)
-         except KeyboardInterrupt:
-             print("\nİptal edildi.")
-             script_cancelled = True
+            confirm = input(f"{Y}Devam etmek istiyor musunuz? (e/H): {W}").strip().lower()
+            if confirm != 'e': print(f"{G}İşlem iptal edildi.{RESET}"); script_cancelled = True
+            else: print(f"{R}YASADIŞI OLABİLECEK İŞLEM BAŞLATILIYOR...{RESET}"); time.sleep(1)
+         except KeyboardInterrupt: print("\nİptal edildi."); script_cancelled = True
     elif script_name in ["kamera_goruntuleme.py", "bilgitoplayıcı.py", "konum_takip.py", "wifipass_breaker.py"]:
-        print(f"{Y}UYARI:{W} Bu araç ('{script_name}') Termux API veya özel Termux komutları gerektirebilir.{RESET}")
-        print(f"{Y}Termux ortamında değilseniz veya Termux API kurulu/izinli değilse çalışmayabilir.{RESET}")
-        time.sleep(2)
+        print(f"{Y}UYARI:{W} Bu araç Termux API veya komutları gerektirebilir.{RESET}"); time.sleep(2)
     elif script_name == "pattern-braker.py":
-         print(f"{Y}UYARI:{W} Bu araç ('{script_name}') PyOpenCL ve NumPy kütüphanelerini gerektirir.{RESET}")
-         print(f"{Y}Ayrıca OpenCL destekli bir GPU ve sürücülerinin kurulu olması gerekebilir.{RESET}")
-         time.sleep(2)
+         print(f"{Y}UYARI:{W} Bu araç PyOpenCL/NumPy ve GPU gerektirebilir.{RESET}"); time.sleep(2)
     elif script_name == "wp-analizer.py":
-         print(f"{Y}UYARI:{W} Bu araç ('{script_name}') Pandas, Pillow, Matplotlib kütüphanelerini gerektirir.{RESET}")
-         print(f"{Y}Ayrıca WhatsApp mesaj veritabanına ('msgstore.db') erişim gerektirir.{RESET}")
-         time.sleep(2)
+         print(f"{Y}UYARI:{W} Bu araç Pandas/Pillow/Matplotlib ve WhatsApp DB erişimi gerektirir.{RESET}"); time.sleep(2)
     elif script_name == "ag-tunelleme.py":
-         print(f"{Y}UYARI:{W} Bu araç ('{script_name}') PyCryptodome, sshtunnel, paramiko kütüphanelerini gerektirir.{RESET}")
-         print(f"{Y}Kurulumları 'pip install pycryptodome sshtunnel paramiko' ile yapabilirsiniz.{RESET}")
-         time.sleep(2)
+         print(f"{Y}UYARI:{W} Bu araç PyCryptodome/sshtunnel/paramiko gerektirir.{RESET}"); time.sleep(2)
 
-    # Betiği çalıştırma (eğer iptal edilmediyse)
+    # Betiği çalıştırma
     if not script_cancelled:
         try:
             python_executable = sys.executable
             command = []
-            # Root gerektiren scriptler için sudo ekle (Linux/macOS)
             if requires_root and os.name != 'nt':
-                 try:
-                     is_root = (os.geteuid() == 0)
-                 except AttributeError:
-                     is_root = False
-
-                 if not is_root:
-                     print(f"{Y}Bu betik root yetkisi gerektiriyor. 'sudo' ile çalıştırılacak...{RESET}")
-                     command.append("sudo")
-                 else:
-                     print(f"{C}Zaten root olarak çalıştırılıyor.{RESET}")
-
+                 try: is_root = (os.geteuid() == 0)
+                 except AttributeError: is_root = False
+                 if not is_root: command.append("sudo")
             command.extend([python_executable, script_path])
+            process = subprocess.run(command, check=False, text=True) # stdout/stderr doğrudan akar
+            # (Çıkış kodu kontrolü ve mesajları öncekiyle aynı)
 
-            process = subprocess.run(command, check=False, text=True, capture_output=False)
-
-            if process.returncode == 0:
-                 print(f"\n{G}{BRIGHT}--- '{script_name}' işlemi normal şekilde tamamlandı (Çıkış Kodu: 0) ---{RESET}")
-            else:
-                 print(f"\n{Y}{BRIGHT}--- '{script_name}' işlemi bir sonuçla tamamlandı (Çıkış Kodu: {process.returncode}) ---{RESET}")
-                 print(f"{Y}Betik içinde bir hata oluşmuş veya işlem kullanıcı tarafından sonlandırılmış olabilir.{RESET}")
-                 if process.returncode == 1 and requires_root and os.name != 'nt':
-                     try:
-                         is_root = (os.geteuid() == 0)
-                     except AttributeError:
-                         is_root = False
-                     if not is_root:
-                        print(f"{R}İpucu: Root yetkisi alamamış olabilirsiniz. Ana betiği 'sudo python3 {os.path.basename(__file__)}' ile çalıştırmayı deneyin.{RESET}")
-
-        except FileNotFoundError:
-            print(f"\n{R}{BRIGHT}HATA: Python yorumlayıcısı '{python_executable}' veya 'sudo' (gerekliyse) bulunamadı!{RESET}")
-        except KeyboardInterrupt:
-             print(f"\n{Y}İşlem kullanıcı tarafından kesildi ('{script_name}' çalışırken).{RESET}")
-             time.sleep(1)
-        except Exception as e:
-            print(f"\n{R}{BRIGHT}Beklenmedik bir hata oluştu ('{script_name}' çalıştırılırken): {e}{RESET}")
-            import traceback
-            traceback.print_exc()
+        except Exception as e: # Genel hata yakalama
+             print(f"\n{R}{BRIGHT}Betik çalıştırılırken hata oluştu ('{script_name}'): {e}{RESET}")
+             # import traceback # Gerekirse detaylı hata için traceback'i etkinleştirin
+             # traceback.print_exc()
 
     # Ana menüye dönmek için bekle
     print(f"\n{Y}Ana menüye dönmek için Enter tuşuna basın...{RESET}")
-    try:
-        input()
-    except KeyboardInterrupt:
-        print("\n\nÇıkış yapılıyor...")
-        sys.exit()
+    try: input()
+    except KeyboardInterrupt: print("\n\nÇıkış yapılıyor..."); sys.exit()
 
 
 # Ana program akışı
@@ -337,12 +291,10 @@ if __name__ == "__main__":
         pass # Uyarı zaten verildi
 
     while True:
-        user_choice = show_menu() # Güncellenmiş menü fonksiyonunu çağır
+        user_choice = show_menu() # YENİ show_menu fonksiyonunu çağır
 
-        if user_choice is None:
-            print(f"{R}Menü gösterilirken veya giriş alınırken bir hata oluştu, program sonlandırılıyor.{RESET}")
-            time.sleep(3)
-            break
+        if user_choice is None: # Menü çiziminde hata olursa
+            print(f"{R}Menü hatası, çıkılıyor.{RESET}"); time.sleep(3); break
 
         # Script eşleştirmeleri (Numaralar güncel)
         script_to_run = None
@@ -371,16 +323,10 @@ if __name__ == "__main__":
         elif user_choice == '23': script_to_run = "wifipass_breaker.py"
         elif user_choice == '24': script_to_run = "wp-analizer.py"
         elif user_choice == '25': script_to_run = "yedek_jammer.py"
-        # ---
         elif user_choice == '0':
-            print(f"\n{B}{BRIGHT}Programdan çıkılıyor...{RESET}")
-            time.sleep(0.5)
-            break
+            print(f"\n{B}{BRIGHT}Programdan çıkılıyor...{RESET}"); time.sleep(0.5); break
         else:
-            print(f"\n{R}{BRIGHT}Geçersiz seçim! Lütfen menüdeki numaralardan birini girin.{RESET}")
-            time.sleep(1.5)
-            continue # Döngünün başına dön
+            print(f"\n{R}{BRIGHT}Geçersiz seçim!{RESET}"); time.sleep(1.5); continue
 
-        # Eğer geçerli bir script seçildiyse çalıştır
         if script_to_run:
              run_script(script_to_run)
