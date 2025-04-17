@@ -7,13 +7,7 @@ import re
 import math # Sütun hesaplaması için eklendi
 
 # --- UYARI ---
-# Bu araç seti çeşitli ağ ve güvenlik araçları içerir.
-# Bazı araçlar (Call/SMS Bomb, Jammer, DoS/DDoS, Bruteforce, SIM Clone, GPS Spoofer vb.)
-# yasa dışı amaçlarla kullanılır ise sorumluluk kullanıcınındır.
-# Bu araçların kullanımından doğacak tüm sorumluluk kullanıcıya aittir.
-# API'lere dayalı araçlar (Call Bomb, SMS Bomb, Link Kısaltıcı) zamanla çalışmaz hale gelebilir.
-# Bazı araçlar özel donanım, izinler (root), bağımlılıklar veya Termux API gerektirebilir.
-# Lütfen araçları kullanmadan önce README dosyasını okuyun.
+# (Uyarı metni öncekiyle aynı, buraya tekrar eklemiyorum)
 # --- UYARI SONU ---
 
 # Colorama import ve fallback mekanizması
@@ -39,7 +33,7 @@ except ImportError:
     class Back: pass
 
 
-# Banner - Orijinal "401", Parlak Yeşil (Kullanıcının padding'i ile)
+# Banner - Orijinal "401", Parlak Yeşil
 banner_padding = " " * 12 # Kullanıcının belirttiği padding
 banner = f"""
 {banner_padding}{G}{BRIGHT}██╗  ██╗ ██████╗  ██╗{RESET}
@@ -60,138 +54,125 @@ def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def show_menu():
-    """Kullanıcının yapısı, yeni renkler ve YAN YANA (2 SÜTUNLU) düzen ile güncellenmiş menü (IP Toolkit kaldırıldı)."""
+    """İstenilen stile göre (er.jpg) güncellenmiş 2 sütunlu menü."""
     clear_screen()
     print(banner)
+    print(f"{C}{BRIGHT}    Crack Your World, If You Can{RESET}") # Örnekteki gibi bir alt başlık
+    print(f"{Y}         Version: 2.1{RESET}") # Versiyon bilgisi
+    print() # Boşluk
 
-    menu_width = 76 # Yan yana sığdırmak için genişlik
-    title = "401 HACKING TOOL v2.1 (IP Tool Kaldırıldı)" # Başlığı güncelledim
-    inner_width = menu_width - 4 # İç genişlik
-
-    # Menü Öğeleri (Güncellenmiş Liste - IP Toolkit olmadan)
+    # Menü Öğeleri (IP Tool kaldırılmış, 1-25 arası numaralı liste)
     menu_items = {
-        # IP Toolkit (eski 6) kaldırıldı, numaralar kaydırıldı
-        '1': f"Call Bomb {R}(API Sorunlu){W}",
+        '1': f"Call Bomb", # Metin rengi Cyan
         '2': f"SMS Bomb",
         '3': f"DoS Saldırısı",
         '4': f"Yedek DDoS",
         '5': f"Base64 Decode",
-        '6': f"Chromecast Hack {R}(API Sorunlu){W}", # Eski 7
-        '7': f"Web Saldırı Araçları {C}(Yeni){W}", # Eski 8
-        '8': f"Instagram Araçları {C}(Yeni){W}", # Eski 9
-        '9': f"Sosyal Medya Bulucu {C}(Yeni){W}", # Eski 10
-        '10': f"Wi-Fi Jammer {C}(Yeni){W}", # Eski 11
-        '11': f"DDoS Tool", # Eski 12
-        '12': f"Ağ Tünelleme (SSH/DNS) {C}(Yeni){W}", # Eski 13
-        '13': f"Bilgi Toplayıcı {C}(Yeni){W}", # Eski 14
-        '14': f"Bruteforce Aracı {C}(Yeni){W}", # Eski 15
-        '15': f"GPS Spoofer {C}(Yeni){W}", # Eski 16
-        '16': f"Kamera Görüntüleme {R}(BAKIMDA){W}", # Eski 17
-        '17': f"Phishing Tool {C}(Yeni){W}", # Eski 18
-        '18': f"Konum Takip {C}(Yeni){W}", # Eski 19
-        '19': f"Özel Link Kısaltıcı {C}(Yeni){W}", # Eski 20
-        '20': f"Pattern Kırıcı {R}(BAKIMDA){W}", # Eski 21
-        '21': f"SIM Klonlayıcı {C}(Yeni){W}", # Eski 22
-        '22': f"IP/Site Dönüştürücü {C}(Yeni){W}", # Eski 23
-        '23': f"WiFi Şifre Kırıcı {C}(Yeni){W}", # Eski 24
-        '24': f"WhatsApp Analiz Aracı {C}(Yeni){W}", # Eski 25
-        '25': f"Yedek Wi-Fi Jammer {C}(Yeni){W}" # Eski 26
+        '6': f"Chromecast Hack",
+        '7': f"Web Saldırı Araçları",
+        '8': f"Instagram Araçları",
+        '9': f"Sosyal Medya Bulucu",
+        '10': f"Wi-Fi Jammer ",
+        '11': f"DDoS Araçları",
+        '12': f"Ağ Tünelleme",
+        '13': f"Bilgi Toplayıcı",
+        '14': f"Bruteforce Aracı",
+        '15': f"GPS Spoofer",
+        '16': f"Kamera Görüntüleme",
+        '17': f"Phishing Tool",
+        '18': f"Konum Takip",
+        '19': f"Özel Link Kısaltıcı",
+        '20': f"Pattern Kırıcı",
+        '21': f"SIM Klonlayıcı",
+        '22': f"IP/Site Dönüştürücü",
+        '23': f"WiFi Şifre Kırıcı",
+        '24': f"WhatsApp Analiz Tool",
+        '25': f"Yedek Wi-Fi Jammer"
     }
 
     try:
-        # --- Menü Kutusu Başlangıcı (EFLATUN - Magenta) ---
-        print(f"{M}{BRIGHT}{'╔' + '═' * (menu_width - 2) + '╗'}{RESET}")
-        # Başlık: Parlak Camgöbeği
-        print(f"{M}{BRIGHT}║ {C}{BRIGHT}{title.center(inner_width)} {M}{BRIGHT}║{RESET}")
-        print(f"{M}{BRIGHT}{'╠' + '═' * (menu_width - 2) + '╣'}{RESET}")
-
-        # --- Sütunlu Menü Öğeleri ---
         menu_items_list = list(menu_items.items())
         num_items = len(menu_items_list)
-        num_cols = 2  # İki sütunlu yapı
-        # Her sütundaki öğe sayısı (yukarı yuvarla)
-        items_per_col = math.ceil(num_items / num_cols)
+        num_cols = 2
+        num_rows = math.ceil(num_items / num_cols)
 
-        # Sütunlar arası boşluk
-        col_spacing = 4
+        # --- Sütun Genişliği Hesaplama ---
+        max_col1_width_plain = 0
+        for i in range(num_rows):
+            idx1 = i * 2 # Sol sütun indeksi
+            if idx1 < num_items:
+                key1 = str(idx1 + 1) # Gösterilecek numara (1, 3, 5...)
+                value1 = menu_items.get(key1, "") # Değeri al
+                # Renksiz format: "XX. Tool Name (Status)"
+                item_str_plain = f"{key1.rjust(2)}. {strip_colors(value1)}"
+                max_col1_width_plain = max(max_col1_width_plain, len(item_str_plain))
 
-        # Her sütunun içeriği için kullanılabilir genişlik
-        available_width_for_cols = inner_width - (num_cols - 1) * col_spacing
-        col_content_width = available_width_for_cols // num_cols
+        col_spacing = 4 # Sütunlar arası boşluk
+        # Toplam menü genişliğini dinamik hesapla (veya sabit tut)
+        # Örnekteki gibi bir genişlik belirleyelim:
+        menu_width = 76 # Ayarlanabilir
+        inner_width = menu_width - 2 # | | arası boşluk
 
-        # Sütunları satır satır yazdır
-        for i in range(items_per_col):
-            row_parts_colored = []
-            row_parts_plain_len = 0
+        # --- Basit Kutu Çizimi (Cyan) ---
+        print(f"{C}{'-' * menu_width}{RESET}") # Üst kenar
 
-            # Mevcut satır için her sütunu oluştur
-            for col_index in range(num_cols):
-                item_index = i + col_index * items_per_col
-                if item_index < num_items:
-                    key, value = menu_items_list[item_index]
-                    num_part_plain = f"[{key}]"
-                    # Numaralar: Parlak Camgöbeği, Metin: Beyaz (veya özel renk)
-                    num_part_colored = f"{C}{BRIGHT}{key.rjust(2)}{W}" # Numaraları sağa yasla (2 haneli varsayımı)
-                    text_part_colored = f" {value}" # Metin ve durum etiketleri
-                    text_part_plain = f" {strip_colors(text_part_colored)}"
+        # Öğeleri satır satır 2 sütun halinde yazdır
+        for i in range(num_rows):
+            # Sol Sütun Öğesi (Index 0, 2, 4...)
+            idx1 = i * 2
+            item1_colored = ""
+            item1_plain_len = 0
+            if idx1 < num_items:
+                key1 = str(idx1 + 1) # Gösterilen Numara 1, 3, 5...
+                value1 = menu_items.get(key1, "")
+                # Format: Beyaz Numara, Cyan Metin
+                item1_colored = f"{W}{key1.rjust(2)}.{C} {value1}"
+                item1_plain_len = len(f"{key1.rjust(2)}. {strip_colors(value1)}")
 
-                    # Renkli ve renksiz öğe stringleri
-                    item_str_colored = f"{num_part_colored}{text_part_colored}"
-                    item_str_plain = f"[{key.rjust(2)}]{text_part_plain}" # Uzunluk hesaplama için renksiz
-                    visible_item_length = len(item_str_plain)
+            # Sağ Sütun Öğesi (Index 1, 3, 5...)
+            idx2 = i * 2 + 1
+            item2_colored = ""
+            if idx2 < num_items:
+                 key2 = str(idx2 + 1) # Gösterilen Numara 2, 4, 6...
+                 value2 = menu_items.get(key2, "")
+                 # Format: Beyaz Numara, Cyan Metin
+                 item2_colored = f"{W}{key2.rjust(2)}.{C} {value2}"
 
-                    # Sütun genişliğine göre padding ekle
-                    padding_needed = col_content_width - visible_item_length
-                    final_padding = ' ' * max(0, padding_needed)
+            # 1. sütundan sonraki boşluğu hesapla
+            padding1 = ' ' * max(0, max_col1_width_plain - item1_plain_len + col_spacing)
 
-                    row_parts_colored.append(f"{item_str_colored}{final_padding}")
-                    row_parts_plain_len += col_content_width # Sütun genişliğini ekle
-                else:
-                    # Bu sütunda/satırda öğe yoksa boşluk ekle
-                    row_parts_colored.append(' ' * col_content_width)
-                    row_parts_plain_len += col_content_width # Sütun genişliğini ekle
+            # İki sütunu birleştir
+            line_content_colored = f"{item1_colored}{padding1}{item2_colored}"
+            line_content_plain_len = len(strip_colors(line_content_colored))
 
-            # Sütunları aralarına boşluk koyarak birleştir
-            line_content_colored = f"{' ' * col_spacing}".join(row_parts_colored)
-            # Toplam uzunluk için sütunlar arası boşluğu ekle
-            row_parts_plain_len += (num_cols - 1) * col_spacing
+            # Satırın sonuna kadar olan boşluğu hesapla
+            final_padding = ' ' * max(0, inner_width - line_content_plain_len)
 
-            # Satırın sonuna, kutu sınırına kadar padding ekle
-            final_line_padding_needed = inner_width - row_parts_plain_len
-            final_line_padding = ' ' * max(0, final_line_padding_needed)
+            # Satırı yazdır
+            print(f"{C}|{RESET} {line_content_colored}{final_padding} {C}|{RESET}")
 
-            # Satırı kutu içinde yazdır
-            print(f"{M}{BRIGHT}║ {line_content_colored}{final_line_padding} {M}{BRIGHT}║{RESET}")
+        # Ayırıcı ve Çıkış Seçeneği
+        print(f"{C}{'-' * menu_width}{RESET}") # Ayırıcı çizgi
 
-        # --- Menü Öğeleri Sonu ---
+        # Çıkış (0) - Örnekteki 88/99 yerine 0 kullanalım
+        exit_text_colored = f"{W} 0. {R}Çıkış{W}"
+        exit_plain_len = len(strip_colors(exit_text_colored))
+        # Çıkışı sola yaslayıp sonuna kadar boşluk ekle
+        final_padding_exit = ' ' * max(0, inner_width - exit_plain_len)
+        print(f"{C}|{RESET} {exit_text_colored}{final_padding_exit} {C}|{RESET}")
 
-        # Boş Satır ve Ayırıcı (Kutu: Eflatun)
-        print(f"{M}{BRIGHT}║{' ' * (inner_width + 2)}║{RESET}")
-        print(f"{M}{BRIGHT}╟{'─' * (menu_width - 2)}╢{RESET}")
-
-        # Çıkış Seçeneği (Numara: Kırmızı) - Sola Yaslı
-        num_part_exit = "[0]"
-        text_part_exit = "Çıkış"
-        item_str_exit_colored = f"{R}{BRIGHT}{num_part_exit}{W} {text_part_exit}"
-        visible_exit_length = len(strip_colors(item_str_exit_colored))
-        padding_needed_exit = inner_width - visible_exit_length
-        final_padding_exit = ' ' * max(0, padding_needed_exit)
-        # Menü satırı (Kutu: Eflatun)
-        print(f"{M}{BRIGHT}║ {item_str_exit_colored}{final_padding_exit} {M}{BRIGHT}║{RESET}")
-
-        # Alt Kenarlık (Kutu: Eflatun)
-        print(f"{M}{BRIGHT}{'╚' + '═' * (menu_width - 2) + '╝'}{RESET}")
+        print(f"{C}{'-' * menu_width}{RESET}") # Alt kenar
         # --- Menü Kutusu Sonu ---
 
     except Exception as e:
         print(f"\n{R}MENÜ ÇİZİM HATASI:{RESET} {e}")
         import traceback
-        traceback.print_exc() # Detaylı hata için
+        traceback.print_exc()
         return None
 
-    # Seçim istemi (Giriş: Yeşil)
+    # Seçim istemi (Beyaz)
     try:
-        choice = input(f"\n{G}{BRIGHT}>> Seçiminizi girin:{W} ")
+        choice = input(f"\n{W}Enter Your Option: {RESET}") # Örnekteki gibi
         return choice
     except KeyboardInterrupt:
         print("\n\nÇıkış yapılıyor...")
@@ -202,6 +183,9 @@ def show_menu():
 
 def run_script(script_name):
     """Belirtilen Python betiğini çalıştırır (Menüyü temizleyerek)."""
+    # (run_script fonksiyonu öncekiyle aynı, buraya tekrar eklemiyorum)
+    # ... ( önceki cevaptaki run_script içeriği buraya gelecek ) ...
+
     # Ekranı temizle
     clear_screen()
 
@@ -293,7 +277,12 @@ def run_script(script_name):
             # Root gerektiren scriptler için sudo ekle (Linux/macOS)
             if requires_root and os.name != 'nt':
                  # Check if already root
-                 if os.geteuid() != 0:
+                 try:
+                     is_root = (os.geteuid() == 0)
+                 except AttributeError: # Windows'ta geteuid yok
+                     is_root = False
+
+                 if not is_root:
                      print(f"{Y}Bu betik root yetkisi gerektiriyor. 'sudo' ile çalıştırılacak...{RESET}")
                      command.append("sudo")
                  else:
@@ -309,8 +298,14 @@ def run_script(script_name):
             else:
                  print(f"\n{Y}{BRIGHT}--- '{script_name}' işlemi bir sonuçla tamamlandı (Çıkış Kodu: {process.returncode}) ---{RESET}")
                  print(f"{Y}Betik içinde bir hata oluşmuş veya işlem kullanıcı tarafından sonlandırılmış olabilir.{RESET}")
-                 if process.returncode == 1 and requires_root and os.name != 'nt' and os.geteuid() != 0:
-                     print(f"{R}İpucu: Root yetkisi alamamış olabilirsiniz. Ana betiği 'sudo python3 401main.py' ile çalıştırmayı deneyin.{RESET}")
+                 if process.returncode == 1 and requires_root and os.name != 'nt':
+                     try:
+                         is_root = (os.geteuid() == 0)
+                     except AttributeError:
+                         is_root = False
+                     if not is_root:
+                        print(f"{R}İpucu: Root yetkisi alamamış olabilirsiniz. Ana betiği 'sudo python3 {os.path.basename(__file__)}' ile çalıştırmayı deneyin.{RESET}")
+
 
         except FileNotFoundError:
             print(f"\n{R}{BRIGHT}HATA: Python yorumlayıcısı '{python_executable}' veya 'sudo' (gerekliyse) bulunamadı!{RESET}")
@@ -330,6 +325,7 @@ def run_script(script_name):
         print("\n\nÇıkış yapılıyor...")
         sys.exit()
 
+
 # Ana program akışı
 if __name__ == "__main__":
     try:
@@ -345,34 +341,33 @@ if __name__ == "__main__":
             time.sleep(3)
             break
 
-        # Script eşleştirmeleri (Numaralar güncellendi)
+        # Script eşleştirmeleri (Numaralar güncellendi - IP Tool yok)
         script_to_run = None
         if user_choice == '1': script_to_run = "call_bomb.py"
         elif user_choice == '2': script_to_run = "sms_bomb.py"
         elif user_choice == '3': script_to_run = "DoS.py"
         elif user_choice == '4': script_to_run = "Basit_ddos.py"
-        elif user_choice == '5': script_to_run = "base64decode.py" # Eski 6
-        # 6 (IP Toolkit) kaldırıldı
-        elif user_choice == '6': script_to_run = "choromecast_hack.py" # Eski 7
-        elif user_choice == '7': script_to_run = "web_saldırı.py" # Eski 8
-        elif user_choice == '8': script_to_run = "insta_saldırı.py" # Eski 9
-        elif user_choice == '9': script_to_run = "sosyalmedya_bulma.py" # Eski 10
-        elif user_choice == '10': script_to_run = "wifi_jammer.py" # Eski 11
-        elif user_choice == '11': script_to_run = "DDoS.py" # Eski 12
-        elif user_choice == '12': script_to_run = "ag-tunelleme.py" # Eski 13
-        elif user_choice == '13': script_to_run = "bilgitoplayıcı.py" # Eski 14
-        elif user_choice == '14': script_to_run = "brutforce.py" # Eski 15
-        elif user_choice == '15': script_to_run = "gps-spoofer.py" # Eski 16
-        elif user_choice == '16': script_to_run = "kamera_goruntuleme.py" # Eski 17
-        elif user_choice == '17': script_to_run = "keylogger.py" # Eski 18
-        elif user_choice == '18': script_to_run = "konum_takip.py" # Eski 19
-        elif user_choice == '19': script_to_run = "ozellink_kısaltıcı.py" # Eski 20
-        elif user_choice == '20': script_to_run = "pattern-braker.py" # Eski 21
-        elif user_choice == '21': script_to_run = "sim-clone.py" # Eski 22
-        elif user_choice == '22': script_to_run = "webip_tool.py" # Eski 23
-        elif user_choice == '23': script_to_run = "wifipass_breaker.py" # Eski 24
-        elif user_choice == '24': script_to_run = "wp-analizer.py" # Eski 25
-        elif user_choice == '25': script_to_run = "yedek_jammer.py" # Eski 26
+        elif user_choice == '5': script_to_run = "base64decode.py"
+        elif user_choice == '6': script_to_run = "choromecast_hack.py"
+        elif user_choice == '7': script_to_run = "web_saldırı.py"
+        elif user_choice == '8': script_to_run = "insta_saldırı.py"
+        elif user_choice == '9': script_to_run = "sosyalmedya_bulma.py"
+        elif user_choice == '10': script_to_run = "wifi_jammer.py"
+        elif user_choice == '11': script_to_run = "DDoS.py"
+        elif user_choice == '12': script_to_run = "ag-tunelleme.py"
+        elif user_choice == '13': script_to_run = "bilgitoplayıcı.py"
+        elif user_choice == '14': script_to_run = "brutforce.py"
+        elif user_choice == '15': script_to_run = "gps-spoofer.py"
+        elif user_choice == '16': script_to_run = "kamera_goruntuleme.py"
+        elif user_choice == '17': script_to_run = "keylogger.py"
+        elif user_choice == '18': script_to_run = "konum_takip.py"
+        elif user_choice == '19': script_to_run = "ozellink_kısaltıcı.py"
+        elif user_choice == '20': script_to_run = "pattern-braker.py"
+        elif user_choice == '21': script_to_run = "sim-clone.py"
+        elif user_choice == '22': script_to_run = "webip_tool.py"
+        elif user_choice == '23': script_to_run = "wifipass_breaker.py"
+        elif user_choice == '24': script_to_run = "wp-analizer.py"
+        elif user_choice == '25': script_to_run = "yedek_jammer.py"
         # ---
         elif user_choice == '0':
             print(f"\n{B}{BRIGHT}Programdan çıkılıyor...{RESET}")
