@@ -7,7 +7,13 @@ import re
 import math # Sütun hesaplaması için eklendi
 
 # --- UYARI ---
-# (Uyarı metni öncekiyle aynı)
+# Bu araç seti çeşitli ağ ve güvenlik araçları içerir.
+# Bazı araçlar (Call/SMS Bomb, Jammer, DoS/DDoS, Bruteforce, SIM Clone, GPS Spoofer vb.)
+# yasa dışı amaçlarla kullanılır ise sorumluluk kullanıcınındır.
+# Bu araçların kullanımından doğacak tüm sorumluluk kullanıcıya aittir.
+# API'lere dayalı araçlar (Call Bomb, SMS Bomb, Link Kısaltıcı) zamanla çalışmaz hale gelebilir.
+# Bazı araçlar özel donanım, izinler (root), bağımlılıklar veya Termux API gerektirebilir.
+# Lütfen araçları kullanmadan önce README dosyasını okuyun.
 # --- UYARI SONU ---
 
 # Colorama import ve fallback mekanizması
@@ -33,16 +39,16 @@ except ImportError:
     class Back: pass
 
 
-# Banner - Orijinal Bitişik Stil (Cyan/Magenta) ve Ortalanmış
-banner_padding = " " * 25 # Ortalamak için boşluğu tekrar artırdım (banner daraldı)
-banner = f"""
-{banner_padding}{C}{BRIGHT}██╗  ██╗{M}{BRIGHT} ██████╗ {C}{BRIGHT} ██╗{RESET}
-{banner_padding}{C}{BRIGHT}██║  ██║{M}{BRIGHT}██╔═████╗{C}{BRIGHT}███║{RESET}
-{banner_padding}{C}{BRIGHT}███████║{M}{BRIGHT}██║██╔██║{C}{BRIGHT}╚██║{RESET}
-{banner_padding}{C}{BRIGHT}╚════██║{M}{BRIGHT}████╔╝██║{C}{BRIGHT} ██║{RESET}
-{banner_padding}{C}{BRIGHT}     ██║{M}{BRIGHT}╚██████╔╝{C}{BRIGHT} ██║{RESET}
-{banner_padding}{C}{BRIGHT}     ╚═╝{M}{BRIGHT} ╚═════╝ {C}{BRIGHT} ╚═╝{RESET}
-"""
+# Banner - Tamamı Cyan, Bitişik Stil
+# (Padding daha sonra hesaplanacak)
+banner_lines = [
+    f"{C}{BRIGHT}██╗  ██╗ ██████╗  ██╗{RESET}",
+    f"{C}{BRIGHT}██║  ██║██╔═████╗███║{RESET}",
+    f"{C}{BRIGHT}███████║██║██╔██║╚██║{RESET}",
+    f"{C}{BRIGHT}╚════██║████╔╝██║ ██║{RESET}",
+    f"{C}{BRIGHT}     ██║╚██████╔╝ ██║{RESET}",
+    f"{C}{BRIGHT}     ╚═╝ ╚═════╝  ╚═╝{RESET}"
+]
 
 # Renk kodlarını temizleyen fonksiyon (hizalama için)
 def strip_colors(s):
@@ -54,13 +60,8 @@ def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def show_menu():
-    """İstenilen stile (er.jpg) BİREBİR benzeyen menü (Banner Bitişik)."""
+    """İstenilen stile (er.jpg) BİREBİR benzeyen menü (Tamamı Cyan Banner, Açıklamasız)."""
     clear_screen()
-    print(banner)
-    # Alt başlıkların hizalamasını dar banner'a göre ayarla
-    print(f"{G}{BRIGHT}{' ' * 28}by 401HackTeam{RESET}") # Boşluğu artırdım
-    print(f"{Y}{' ' * 30}Version: 1.1{RESET}")      # Boşluğu artırdım
-    print()
 
     # Menü Öğeleri (Açıklamasız)
     menu_items = {
@@ -92,27 +93,56 @@ def show_menu():
     }
 
     try:
+        # --- Dinamik Genişlik Hesaplama ---
         menu_items_list = list(menu_items.items())
         num_items = len(menu_items_list)
         num_cols = 2
         num_rows = math.ceil(num_items / num_cols)
 
-        # --- Sütun Genişliği Hesaplama ---
         max_col1_width_plain = 0
         for i in range(num_rows):
             idx1 = i * 2
             if idx1 < num_items:
                 key1 = str(idx1 + 1)
                 value1 = menu_items.get(key1, "")
-                item_str_plain = f"{key1.rjust(2)}. {value1}"
+                item_str_plain = f"{key1.rjust(2)}. {value1}" # Rjust ile 2 haneye tamamla
                 max_col1_width_plain = max(max_col1_width_plain, len(item_str_plain))
 
-        col_spacing = 4
-        menu_width = 70 # Genişlik
-        inner_width = menu_width - 2
+        max_col2_width_plain = 0
+        for i in range(num_rows):
+            idx2 = i * 2 + 1
+            if idx2 < num_items:
+                key2 = str(idx2 + 1)
+                value2 = menu_items.get(key2, "")
+                item_str_plain = f"{key2.rjust(2)}. {value2}" # Rjust ile 2 haneye tamamla
+                max_col2_width_plain = max(max_col2_width_plain, len(item_str_plain))
+
+        col_spacing = 4 # Sütunlar arası boşluk
+        # İçerik genişliğini hesapla
+        inner_width = max_col1_width_plain + col_spacing + max_col2_width_plain
+        # Toplam menü genişliğini belirle (içerik + kenarlar + 2 boşluk)
+        menu_width = inner_width + 4 # Kenarlar | ve iç boşluklar için
+
+        # --- Banner ve Alt Başlıkları Ortala ve Yazdır ---
+        print() # Üstte boşluk
+        for line in banner_lines:
+            line_plain_len = len(strip_colors(line))
+            padding_len = max(0, (menu_width - line_plain_len) // 2)
+            print(f"{' ' * padding_len}{line}")
+
+        sub_head1 = f"{G}{BRIGHT}by 401HackTeam{RESET}"
+        sub_head1_len = len(strip_colors(sub_head1))
+        padding1 = max(0, (menu_width - sub_head1_len) // 2)
+        print(f"{' ' * padding1}{sub_head1}")
+
+        sub_head2 = f"{Y}Version: 1.1{RESET}"
+        sub_head2_len = len(strip_colors(sub_head2))
+        padding2 = max(0, (menu_width - sub_head2_len) // 2)
+        print(f"{' ' * padding2}{sub_head2}")
+        print() # Altında boşluk
 
         # --- Basit Kutu Çizimi (Cyan) ---
-        print(f"{C}{'-' * menu_width}{RESET}") # Üst
+        print(f"{C}{'-' * menu_width}{RESET}") # Üst kenar
 
         # Öğeleri satır satır 2 sütun halinde yazdır
         for i in range(num_rows):
@@ -123,8 +153,11 @@ def show_menu():
             if idx1 < num_items:
                 key1 = str(idx1 + 1)
                 value1 = menu_items.get(key1, "")
+                # Format: Beyaz Numara. Cyan Metin (Sola Yaslı)
                 item1_colored = f"{W}{key1.rjust(2)}.{C} {value1}{RESET}"
                 item1_plain_len = len(f"{key1.rjust(2)}. {value1}")
+                # Sütun genişliğine göre sağa boşluk ekle (max_col1'e göre)
+                item1_colored += ' ' * max(0, max_col1_width_plain - item1_plain_len)
 
             # Sağ Sütun
             idx2 = i * 2 + 1
@@ -132,22 +165,29 @@ def show_menu():
             if idx2 < num_items:
                  key2 = str(idx2 + 1)
                  value2 = menu_items.get(key2, "")
+                 # Format: Beyaz Numara. Cyan Metin (Sola Yaslı)
                  item2_colored = f"{W}{key2.rjust(2)}.{C} {value2}{RESET}"
+                 # Sağa doğru boşluk eklemeye gerek yok (satır sonuna kadar eklenecek)
 
-            padding1 = ' ' * max(0, max_col1_width_plain - item1_plain_len + col_spacing)
-            line_content_colored = f"{item1_colored}{padding1}{item2_colored}"
+            # İki sütun arasına boşluk ekle
+            line_content_colored = f"{item1_colored}{' ' * col_spacing}{item2_colored}"
             line_content_plain_len = len(strip_colors(line_content_colored))
+
+            # Satırın sonuna kadar olan boşluğu hesapla
             final_padding = ' ' * max(0, inner_width - line_content_plain_len)
 
-            print(f"{C}|{RESET} {line_content_colored}{final_padding} {C}|{RESET}")
+            # Satırı yazdır (| Kenar Boşluk İçerik Boşluk Kenar |)
+            print(f"{C}| {RESET}{line_content_colored}{final_padding} {C}|{RESET}")
+
 
         # Ayırıcı ve Çıkış
         print(f"{C}{'-' * menu_width}{RESET}")
 
-        exit_text_colored = f"{W} 0. {R}Çıkış{RESET}"
+        exit_text_colored = f"{W} 0. {R}Çıkış{RESET}" # Beyaz No, Kırmızı Metin
         exit_plain_len = len(strip_colors(exit_text_colored))
+        # Çıkışı sola yasla ve sona kadar boşluk ekle
         final_padding_exit = ' ' * max(0, inner_width - exit_plain_len)
-        print(f"{C}|{RESET} {exit_text_colored}{final_padding_exit} {C}|{RESET}")
+        print(f"{C}| {RESET}{exit_text_colored}{final_padding_exit} {C}|{RESET}")
 
         print(f"{C}{'-' * menu_width}{RESET}") # Alt
         # --- Menü Kutusu Sonu ---
@@ -160,7 +200,7 @@ def show_menu():
 
     # Seçim istemi
     try:
-        choice = input(f"\n{W}Enter Your Option: {RESET}")
+        choice = input(f"\n{W}Enter Your Option: {RESET}") # Örnekteki gibi istem
         return choice
     except KeyboardInterrupt:
         print("\n\nÇıkış yapılıyor...")
@@ -292,6 +332,7 @@ def run_script(script_name):
                          is_root = False
                      if not is_root:
                         print(f"{R}İpucu: Root yetkisi alamamış olabilirsiniz. Ana betiği 'sudo python3 {os.path.basename(__file__)}' ile çalıştırmayı deneyin.{RESET}")
+
 
         except FileNotFoundError:
             print(f"\n{R}{BRIGHT}HATA: Python yorumlayıcısı '{python_executable}' veya 'sudo' (gerekliyse) bulunamadı!{RESET}")
