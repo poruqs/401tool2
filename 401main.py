@@ -42,8 +42,6 @@ author_text = f"{green1}by 401HackTeam{coloursoff}" # Yeşil
 version_text = f"{yellow1}Version: 1.2{coloursoff}" # Sarı, Güncel versiyon
 
 # --- Menü Öğeleri (Türkçe İsimler ve Çalıştırılacak Dosyalar) ---
-# Anahtar: Menü Numarası (string)
-# Değer: (Menüde Görünecek Türkçe İsim, Çalıştırılacak Python Dosyası Adı)
 tool_map = {
     '1': ("Call Bomb", "call_bomb.py"),
     '2': ("SMS Bomb", "sms_bomb.py"),
@@ -61,7 +59,7 @@ tool_map = {
     '14': ("Bruteforce Aracı", "brutforce.py"),
     '15': ("GPS Spoofer", "gps-spoofer.py"),
     '16': ("Kamera Görüntüleme", "kamera_goruntuleme.py"),
-    '17': ("Phishing Aracı", "keylogger.py"), # İsim güncellendi
+    '17': ("Phishing Aracı", "keylogger.py"),
     '18': ("Konum Takip", "konum_takip.py"),
     '19': ("Özel Link Kısaltıcı", "ozellink_kısaltıcı.py"),
     '20': ("Pattern Kırıcı", "pattern-braker.py"),
@@ -72,7 +70,7 @@ tool_map = {
     '25': ("Yedek Wi-Fi Jammer", "yedek_jammer.py")
 }
 exit_option = '0'
-exit_text = "Exit" # Çıkış metni
+exit_text = "Exit"
 
 # --- Yardımcı Fonksiyonlar ---
 def strip_colors(s):
@@ -88,14 +86,12 @@ def get_terminal_width(default=80):
     """Terminal genişliğini alır, alamazsa varsayılanı döndürür."""
     try:
         columns, _ = shutil.get_terminal_size()
-        # Kenar boşluklarını hesaba katmadan tam genişliği alalım
-        return max(40, columns) # Minimum 40 varsayalım
+        return max(40, columns)
     except OSError:
-        # Terminal boyutu alınamazsa varsayılanı kullan
         return default
 
 # ==================================================================
-# FİNAL MENÜ FONKSİYONU (13/12 Bölünmüş, Sıkıştırılmış, Ortalanmış)
+# FİNAL MENÜ FONKSİYONU (Prompt Sola Hizalı)
 # ==================================================================
 def show_menu_final():
     """Menüyü 13/12 bölünmüş, çift sütunlu, sıkıştırılmış ve ortalanmış gösterir."""
@@ -104,78 +100,67 @@ def show_menu_final():
         terminal_width = get_terminal_width()
 
         # --- Sabitler ve Hesaplamalar ---
-        num_rows = 13 # Sol: 1-13, Sağ: 14-25
-        col_spacing = 2 # Sütun arası boşluk (minimal)
+        num_rows = 13 ; col_spacing = 2
 
-        # --- Sütunların İçeriğe Göre Minimum Genişliğini Hesapla ---
+        # --- Sütun Genişliklerini Hesapla ---
         max_len_col1_no_color = 0
-        for i in range(1, num_rows + 1): # 1-13
-            key = str(i)
+        keys_col1 = [str(k) for k in range(1, num_rows + 1)]
+        for key in keys_col1:
             if key in tool_map:
-                # Format: "NN. İsim" (renksiz)
                 item_text_for_len = f"{key.rjust(2)}. {tool_map[key][0]}"
                 max_len_col1_no_color = max(max_len_col1_no_color, len(strip_colors(item_text_for_len)))
 
         max_len_col2_no_color = 0
-        for i in range(num_rows + 1, num_rows + 1 + num_rows): # 14-26
-            key = str(i)
-            if key in tool_map: # Sadece 25'e kadar bakar
+        keys_col2 = [str(k) for k in range(num_rows + 1, num_rows * 2 + 1)]
+        for key in keys_col2:
+            if key in tool_map:
                 item_text_for_len = f"{key.rjust(2)}. {tool_map[key][0]}"
                 max_len_col2_no_color = max(max_len_col2_no_color, len(strip_colors(item_text_for_len)))
 
         # --- Çerçeve Boyutunu Hesapla ---
-        # İçerik genişliği = Sütun1 + Boşluk + Sütun2
         required_inner_width = max_len_col1_no_color + col_spacing + max_len_col2_no_color
-        # Çerçeve genişliği = İçerik + 2 (| karakterleri)
         frame_width = required_inner_width + 2
         frame_char = "="
         frame_line = f"{pest1}{frame_char * frame_width}{coloursoff}"
-
-        # --- Ortalamak İçin Sol Boşluğu Hesapla ---
         left_padding_str = " " * max(0, (terminal_width - frame_width) // 2)
 
         # --- Banner/Başlık (Ortalanmış) ---
-        print("\n") # Banner üstü boşluk
+        print("\n")
         for line in banner_lines:
              banner_len_no_color = len(strip_colors(line))
              banner_padding_str = " " * max(0, (terminal_width - banner_len_no_color) // 2)
              print(f"{banner_padding_str}{line}")
-        # Yazar ve Versiyon (Ortalanmış)
         author_len = len(strip_colors(author_text))
         version_len = len(strip_colors(version_text))
         print(f"{' ' * max(0, (terminal_width - author_len)//2)}{author_text}")
         print(f"{' ' * max(0, (terminal_width - version_len)//2)}{version_text}")
-        print("\n") # Menüden önce boşluk
+        print("\n")
 
         # --- Menü Çerçevesi ve İçeriği (Ortalanmış) ---
         print(f"{left_padding_str}{frame_line}") # Üst çerçeve
 
-        for i in range(num_rows): # 0'dan 12'ye (13 satır)
-            # Sol Sütun (Anahtar: 1-13)
+        for i in range(num_rows):
+            # Sol Sütun (1-13)
             left_key = str(i + 1)
             left_text_raw = "" ; left_len_no_color = 0
             if left_key in tool_map:
                 left_name = tool_map[left_key][0]
                 left_text_raw = f"{yellow1}{left_key.rjust(2)}{white1}.{pest1}{left_name}{coloursoff}"
                 left_len_no_color = len(strip_colors(left_text_raw))
-            # Sol sütunu max genişliğe tamamla
             left_padding = ' ' * max(0, max_len_col1_no_color - left_len_no_color)
             left_col_formatted = left_text_raw + left_padding
 
-            # Sağ Sütun (Anahtar: 14-26)
+            # Sağ Sütun (14-25)
             right_key = str(i + 1 + num_rows)
             right_text_raw = ""
-            if right_key in tool_map: # Sadece 14-25 arası eşleşir
+            if right_key in tool_map:
                 right_name = tool_map[right_key][0]
                 right_text_raw = f"{yellow1}{right_key.rjust(2)}{white1}.{pest1}{right_name}{coloursoff}"
-            # Sağ sütun için padding'e gerek yok, satır sonu padding halleder
 
             # Satırı Birleştir ve Hizala
             line_content = f"{left_col_formatted}{' ' * col_spacing}{right_text_raw}"
             line_len_no_color = len(strip_colors(line_content))
-            # Satırın sonuna padding ekle (sağ çerçeveyi hizala)
             end_padding = ' ' * max(0, required_inner_width - line_len_no_color)
-            # Kenarlarda boşluk yok: |İçerik|
             print(f"{left_padding_str}{pest1}|{line_content}{end_padding}{pest1}|{coloursoff}")
 
         # Çıkış Seçeneği (Sağa Yaslı)
@@ -183,17 +168,15 @@ def show_menu_final():
         exit_text_formatted = f"{yellow1}{exit_num_str}{white1}.{red1}{exit_text}{coloursoff}"
         exit_len_no_color = len(strip_colors(exit_text_formatted))
         exit_padding = ' ' * max(0, required_inner_width - exit_len_no_color)
-        # Kenarlarda boşluk yok: | İçerik|
         print(f"{left_padding_str}{pest1}|{exit_padding}{exit_text_formatted}{pest1}|{coloursoff}")
 
         print(f"{left_padding_str}{frame_line}") # Alt çerçeve
 
-        # --- Prompt (Ortalanmış) ---
+        # --- Prompt (Sola, çerçeve ile hizalı) --- ### DEĞİŞİKLİK BURADA ###
         try:
             prompt_text = f"{rosy1}Enter Your Option: {coloursoff}"
-            prompt_len = len("Enter Your Option: ")
-            prompt_padding_str = " " * max(0, (terminal_width - prompt_len) // 2)
-            choice = input(f"\n{prompt_padding_str}{prompt_text}")
+            # Ortalamak yerine sol çerçeve padding'ini kullan
+            choice = input(f"\n{left_padding_str}{prompt_text}") # prompt_padding_str kaldırıldı, left_padding_str kullanıldı
             return choice.strip()
         except KeyboardInterrupt: sys.exit(f"\n\n{Y}+401 hack tool kapatıldı...{RESET}")
         except Exception as e: print(f"\n{R}INPUT ERROR: {e}{RESET}"); traceback.print_exc(); time.sleep(3); return None
@@ -205,19 +188,18 @@ def show_menu_final():
 
 
 # ==================================================================
-# RUN_SCRIPT (İngilizce Mesajlar ile Aynı Kalır)
+# RUN_SCRIPT (Değişiklik Yok)
 # ==================================================================
 def run_script(script_name):
-    """Belirtilen Python betiğini çalıştırır ve hataları yönetir."""
+    # Bu fonksiyon önceki cevapta olduğu gibi İngilizce mesajlarla kalabilir.
     try:
         clear_screen()
 
         if not script_name:
             print(f"{R}Script name to run not specified.{RESET}")
             time.sleep(2); input(f"\n{Y}Press Enter to return to main menu...{RESET}"); return
-        script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), script_name) # Daha güvenli yol alma
+        script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), script_name)
         if not os.path.exists(script_path):
-            # Betik bulunamazsa kullanıcıya bilgi ver
             print(f"\n{R}{BRIGHT}ERROR: Script '{script_name}' not found in the current directory!{RESET}")
             print(f"{Y}Please ensure '{script_name}' is in the same folder as the main script.{RESET}")
             time.sleep(3); input(f"\n{Y}Press Enter to return to main menu...{RESET}"); return
@@ -225,8 +207,7 @@ def run_script(script_name):
         print(f"{C}{BRIGHT}--- Starting '{script_name}' ---{RESET}\n"); time.sleep(0.5)
         script_cancelled = False; requires_root = False
 
-        # --- YASAL UYARILAR ve ÖN KONTROLLER ---
-        # (Bu kısım öncekiyle aynı kalabilir)
+        # --- LEGAL WARNINGS & PRE-CHECKS ---
         if script_name == "netflix_checker.py": print(f"{R}{BRIGHT}WARNING:{Y} Netflix Checker is deprecated.{RESET}"); time.sleep(3); script_cancelled = True
         elif script_name in ["call_bomb.py", "sms_bomb.py"]: print(f"{Y}{BRIGHT}WARNING:{W} APIs might be outdated. Misuse is illegal.{RESET}"); time.sleep(2)
         elif script_name in ["DoS.py", "Basit_ddos.py", "DDoS.py", "brutforce.py", "keylogger.py"]: print(f"{R}{BRIGHT}!!! LEGAL WARNING !!!{RESET}\n{R}Unauthorized use is ILLEGAL! Only perform authorized tests.{RESET}"); time.sleep(3)
@@ -237,7 +218,6 @@ def run_script(script_name):
             if script_name == "gps-spoofer.py": print(f"{Y}Requires 'gpsd' and location permissions.{RESET}")
             print(f"{Y}For educational purposes only. Responsibility is yours.{RESET}")
             try:
-                # Onay sorusu için İngilizce kullanalım
                 confirm = input(f"{Y}Do you want to continue? (y/N): {W}").strip().lower()
                 if confirm != 'y': print(f"{G}Operation cancelled.{RESET}"); script_cancelled = True
                 else: print(f"{R}POTENTIALLY ILLEGAL OPERATION STARTING...{RESET}"); time.sleep(1)
@@ -247,64 +227,53 @@ def run_script(script_name):
         elif script_name == "wp-analizer.py": print(f"{Y}WARNING:{W} Requires Pandas/Pillow/Matplotlib and WhatsApp DB access.{RESET}"); time.sleep(2)
         elif script_name == "ag-tunelleme.py": print(f"{Y}WARNING:{W} Requires PyCryptodome/sshtunnel/paramiko.{RESET}"); time.sleep(2)
 
-        # Betiği Çalıştır
+        # Execute Script
         if not script_cancelled:
             try:
                 python_executable = sys.executable; command = []
-                # Root kontrolü ve sudo ekleme
                 if requires_root and os.name != 'nt':
                     try: is_root = (os.geteuid() == 0)
-                    except AttributeError: is_root = False # Windows'ta kontrol etme
+                    except AttributeError: is_root = False
                     if not is_root: print(f"{Y}Root privileges required, using 'sudo'...{RESET}"); command.append("sudo")
                 command.extend([python_executable, script_path])
                 print(f"{G}Executing command: {' '.join(command)}{RESET}")
-                # Betiği çalıştır
-                process = subprocess.run(command, check=False, text=True, encoding='utf-8') # Encoding belirtmek iyi olabilir
-                # Dönüş kodunu kontrol et
+                process = subprocess.run(command, check=False, text=True, encoding='utf-8')
                 if process.returncode != 0: print(f"{Y}Warning: script '{script_name}' finished with exit code {process.returncode}.{RESET}")
             except FileNotFoundError: print(f"{R}{BRIGHT}ERROR: '{python_executable}' or 'sudo' not found.{RESET}"); traceback.print_exc()
             except PermissionError: print(f"{R}{BRIGHT}ERROR: Permission denied to execute '{script_name}'.{RESET}"); traceback.print_exc()
             except Exception as e: print(f"\n{R}{BRIGHT}Error occurred while running script:{RESET}\n{e}"); traceback.print_exc()
     except Exception as outer_run_err: print(f"\n{R}{BRIGHT}CRITICAL run_script ERROR:{RESET}\n{outer_run_err}"); traceback.print_exc()
 
-    # Ana menüye dönme istemi
     print(f"\n{Y}Press Enter to return to main menu...{RESET}")
     try: input()
-    except KeyboardInterrupt: print(f"\n\n{Y}+401 hack tool kapatıldı...{RESET}"); sys.exit() # Çıkış mesajı
+    except KeyboardInterrupt: print(f"\n\n{Y}+401 hack tool kapatıldı...{RESET}"); sys.exit()
 
 
 # Ana Program Akışı
 if __name__ == "__main__":
     try:
-        # colorama kontrolü
         try: import colorama
         except ImportError: pass
 
         while True:
-            user_choice = show_menu_final() # En son menü fonksiyonunu çağır
+            user_choice = show_menu_final() # Menüyü çağır
 
             if user_choice is None: continue # Menü/Giriş hatası
 
             if user_choice == exit_option: # Çıkış ('0')
-                # Çıkış mesajı burada yazdırılıyor
                 print(f"\n{Y}+401 hack tool kapatıldı...{RESET}")
                 time.sleep(0.5)
                 break # Döngüyü sonlandır
             elif user_choice in tool_map:
-                # Seçilen araca karşılık gelen script dosyasını çalıştır
                 script_file_to_run = tool_map[user_choice][1]
                 run_script(script_file_to_run)
             else:
-                # Geçersiz seçim mesajı
-                print(f"\n{R}{BRIGHT}Invalid choice! Please enter a number from the list.{RESET}")
+                print(f"\n{R}{BRIGHT}Invalid choice!{RESET}")
                 time.sleep(1.5)
 
     except KeyboardInterrupt:
-        # Ctrl+C ile çıkılırsa mesajı yazdır
         print(f"\n\n{Y}+401 hack tool kapatıldı...{RESET}")
     except Exception as main_err:
-        # Beklenmedik ana program hatası
-        print(f"\n{R}{BRIGHT}CRITICAL PROGRAM ERROR:{RESET}\n{main_err}")
+        print(f"\n{R}{BRIGHT}CRITICAL ERROR:{RESET}\n{main_err}")
         traceback.print_exc()
         input(f"\n{Y}Press Enter to exit...{RESET}")
-    # 'finally' bloğu kaldırıldı, çıkış mesajları yukarıda halledildi.
