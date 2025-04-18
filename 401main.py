@@ -7,47 +7,25 @@ import re
 import base64
 import codecs
 import traceback # Hata ayıklama için
+import shutil # Terminal genişliği için
 
 # --- Renk Tanımları (er.jpg stiline uygun) ---
 try:
     from colorama import init, Fore, Style
     init(autoreset=True)
-    BRIGHT = Style.BRIGHT
-    R = Fore.RED
-    G = Fore.GREEN
-    Y = Fore.YELLOW
-    C = Fore.CYAN
-    W = Fore.WHITE
-    RESET = Style.RESET_ALL
-    # Renkleri tanımla
-    pest1 = C      # Çerçeve ve Araç Adı (Cyan)
-    yellow1 = Y    # Numara (Sarı)
-    red1 = R       # Çıkış Metni (Kırmızı)
-    rosy1 = Fore.MAGENTA # Prompt (Magenta/Pembe)
-    green1 = G     # Alt Başlık (Yeşil)
-    white1 = W     # Nokta (Beyaz)
-    coloursoff = RESET
+    BRIGHT = Style.BRIGHT ; R = Fore.RED ; G = Fore.GREEN ; Y = Fore.YELLOW
+    C = Fore.CYAN ; W = Fore.WHITE ; RESET = Style.RESET_ALL
+    pest1 = C ; yellow1 = Y ; red1 = R ; rosy1 = Fore.MAGENTA
+    green1 = G ; white1 = W ; coloursoff = RESET
 except ImportError:
-    print("Uyarı: Renkli arayüz için 'colorama' kütüphanesi gerekli.")
-    print("Lütfen 'pip install colorama' komutu ile yükleyin.")
-    BRIGHT = "\033[1m"
-    R = "\033[91m"
-    G = "\033[92m"
-    Y = "\033[93m"
-    C = "\033[96m"
-    W = "\033[97m"
-    RESET = "\033[0m"
-    pest1 = C
-    yellow1 = Y
-    red1 = R
-    rosy1 = "\033[95m" # Magenta
-    green1 = G
-    white1 = W
-    coloursoff = RESET
+    print("Uyarı: Renkli arayüz için 'colorama' kütüphanesi gerekli ('pip install colorama').")
+    BRIGHT = "\033[1m" ; R = "\033[91m" ; G = "\033[92m" ; Y = "\033[93m"
+    C = "\033[96m" ; W = "\033[97m" ; RESET = "\033[0m"
+    pest1 = C ; yellow1 = Y ; red1 = R ; rosy1 = "\033[95m" # Magenta
+    green1 = G ; white1 = W ; coloursoff = RESET
 
 
 # --- Banner (Senin 401 ASCII Banner'ın) ---
-banner_padding = " " * 7 # Ortalama için padding
 banner_lines = [
     f"{C}{BRIGHT}██╗  ██╗ ██████╗  ██╗{RESET}",
     f"{C}{BRIGHT}██║  ██║██╔═████╗███║{RESET}",
@@ -56,151 +34,196 @@ banner_lines = [
     f"{C}{BRIGHT}     ██║╚██████╔╝ ██║{RESET}",
     f"{C}{BRIGHT}     ╚═╝ ╚═════╝  ╚═╝{RESET}"
 ]
-# er.jpg'deki metinler (senin versiyonunla güncellendi)
 author_text = f"{green1}by 401HackTeam{coloursoff}" # Yeşil
 version_text = f"{yellow1}Version: 1.1{coloursoff}" # Sarı
 
 # --- Menü Öğeleri (Senin güncel listen) ---
 tool_map = {
-    '1': ("Call Bomb", "call_bomb.py"),
-    '2': ("SMS Bomb", "sms_bomb.py"),
-    '3': ("DoS Saldırısı", "DoS.py"),
-    '4': ("Yedek DDoS", "Basit_ddos.py"),
-    '5': ("Base64 Decode", "base64decode.py"),
-    '6': ("Chromecast Hack", "choromecast_hack.py"),
-    '7': ("Web Saldırı", "web_saldırı.py"),
-    '8': ("Instagram Araçları", "insta_saldırı.py"),
-    '9': ("Sosyal Medya Bulucu", "sosyalmedya_bulma.py"),
-    '10': ("Wi-Fi Jammer", "wifi_jammer.py"),
-    '11': ("DDoS Araçları", "DDoS.py"),
-    '12': ("Ağ Tünelleme", "ag-tunelleme.py"),
-    '13': ("Bilgi Toplayıcı", "bilgitoplayıcı.py"),
-    '14': ("Bruteforce Aracı", "brutforce.py"),
-    '15': ("GPS Spoofer", "gps-spoofer.py"),
-    '16': ("Kamera Görüntüleme", "kamera_goruntuleme.py"),
-    '17': ("Log/Phishing/FakeAPK", "keylogger.py"),
-    '18': ("Konum Takip", "konum_takip.py"),
-    '19': ("Özel Link Kısaltıcı", "ozellink_kısaltıcı.py"),
-    '20': ("Pattern Kırıcı", "pattern-braker.py"),
-    '21': ("SIM Klonlayıcı", "sim-clone.py"),
-    '22': ("IP/Site Dönüştürücü", "webip_tool.py"),
-    '23': ("WiFi Şifre Kırıcı", "wifipass_breaker.py"),
-    '24': ("WhatsApp Analiz", "wp-analizer.py"),
+    '1': ("Call Bomb", "call_bomb.py"), '2': ("SMS Bomb", "sms_bomb.py"),
+    '3': ("DoS Saldırısı", "DoS.py"), '4': ("Yedek DDoS", "Basit_ddos.py"),
+    '5': ("Base64 Decode", "base64decode.py"), '6': ("Chromecast Hack", "choromecast_hack.py"),
+    '7': ("Web Saldırı", "web_saldırı.py"), '8': ("Instagram Araçları", "insta_saldırı.py"),
+    '9': ("Sosyal Medya Bulucu", "sosyalmedya_bulma.py"), '10': ("Wi-Fi Jammer", "wifi_jammer.py"),
+    '11': ("DDoS Araçları", "DDoS.py"), '12': ("Ağ Tünelleme", "ag-tunelleme.py"),
+    '13': ("Bilgi Toplayıcı", "bilgitoplayıcı.py"), '14': ("Bruteforce Aracı", "brutforce.py"),
+    '15': ("GPS Spoofer", "gps-spoofer.py"), '16': ("Kamera Görüntüleme", "kamera_goruntuleme.py"),
+    '17': ("Log/Phishing/FakeAPK", "keylogger.py"), '18': ("Konum Takip", "konum_takip.py"),
+    '19': ("Özel Link Kısaltıcı", "ozellink_kısaltıcı.py"), '20': ("Pattern Kırıcı", "pattern-braker.py"),
+    '21': ("SIM Klonlayıcı", "sim-clone.py"), '22': ("IP/Site Dönüştürücü", "webip_tool.py"),
+    '23': ("WiFi Şifre Kırıcı", "wifipass_breaker.py"), '24': ("WhatsApp Analiz", "wp-analizer.py"),
     '25': ("Yedek Wi-Fi Jammer", "yedek_jammer.py")
 }
-exit_option = '0' # Senin çıkış numaran
-exit_text = "Exit" # er.jpg'deki gibi İngilizce
+exit_option = '0'
+exit_text = "Exit"
 
 # --- Yardımcı Fonksiyonlar ---
 def strip_colors(s):
-    """ANSI renk kodlarını temizler."""
     try: return re.sub(r'\x1b\[[0-9;]*[mK]', '', str(s))
     except Exception as e: print(f"{R}strip_colors HATA: {e}{RESET}"); return str(s)
 
-def clear_screen():
-    """Ekranı temizler."""
-    os.system('cls' if os.name == 'nt' else 'clear')
+def clear_screen(): os.system('cls' if os.name == 'nt' else 'clear')
+
+def get_terminal_width(default=80):
+    try:
+        columns, _ = shutil.get_terminal_size()
+        return max(40, columns - 2) # Min 40 genişlik
+    except OSError: return default
 
 # ==================================================================
-# SHOW_MENU_ER_JPG_STYLE_V3 (Hata düzeltmeleri ve 26. slot boş)
+# TEK SÜTUNLU, ORTALANMIŞ, KOMPAKT MENÜ (DAR EKRANLAR İÇİN)
 # ==================================================================
-def show_menu_er_jpg_style_v3():
-    """er.jpg stiline göre menüyü gösterir (26. slot boş)."""
+def show_menu_single_column_centered(terminal_width):
+    """Dar ekranlar için tek sütunlu, ortalanmış menü."""
+    try:
+        # --- Genişlik Hesaplama ---
+        max_item_len_no_color = 0
+        for key, (name, _) in tool_map.items():
+            item_text_for_len = f"{key.rjust(2)}. {name}"
+            max_item_len_no_color = max(max_item_len_no_color, len(item_text_for_len))
+        exit_text_for_len = f"{exit_option.rjust(2)}. {exit_text}"
+        max_item_len_no_color = max(max_item_len_no_color, len(exit_text_for_len))
+
+        inner_width = max_item_len_no_color + 2
+        frame_width = inner_width + 2
+        frame_char = "="
+        frame_line = f"{pest1}{frame_char * frame_width}{coloursoff}"
+        left_padding_str = " " * max(0, (terminal_width - frame_width) // 2)
+
+        # --- Menüyü Yazdır ---
+        print(f"{left_padding_str}{frame_line}") # Üst çerçeve
+        for key, (name, _) in tool_map.items():
+            item_text_raw = f"{yellow1}{key.rjust(2)}{white1}.{pest1}{name}{coloursoff}"
+            item_len_no_color = len(strip_colors(item_text_raw))
+            end_padding = ' ' * max(0, inner_width - item_len_no_color)
+            print(f"{left_padding_str}{pest1}| {item_text_raw}{end_padding} {pest1}|{coloursoff}")
+
+        exit_num_str = exit_option.rjust(2)
+        exit_text_formatted = f"{yellow1}{exit_num_str}{white1}.{red1}{exit_text}{coloursoff}"
+        exit_len_no_color = len(strip_colors(exit_text_formatted))
+        exit_inner_padding = ' ' * max(0, inner_width - exit_len_no_color)
+        print(f"{left_padding_str}{pest1}|{exit_inner_padding}{exit_text_formatted} {pest1}|{coloursoff}")
+        print(f"{left_padding_str}{frame_line}") # Alt çerçeve
+
+    except Exception as single_col_err:
+        print(f"\n{R}Tek Sütunlu Menü Hatası: {single_col_err}{RESET}")
+        traceback.print_exc()
+
+# ==================================================================
+# ADAPTİF MENÜ GÖSTERME FONKSİYONU
+# ==================================================================
+def show_adaptive_menu():
+    """Ekran genişliğine göre çift veya tek sütunlu menü gösterir."""
     try:
         clear_screen()
+        terminal_width = get_terminal_width()
 
-        # --- Banner ve Alt Başlıkları Yazdır ---
-        print("\n\n")
-        for line in banner_lines: print(f"{banner_padding}{line}")
-        banner_width = len(strip_colors(banner_lines[0])) # Renksiz genişlik
-        print(author_text.center(banner_width + len(banner_padding)*2))
-        print(version_text.center(banner_width + len(banner_padding)*2))
+        # --- Banner ve Alt Başlıkları Ortala ve Yazdır ---
+        print("\n")
+        for line in banner_lines:
+             banner_len_no_color = len(strip_colors(line))
+             banner_padding_str = " " * max(0, (terminal_width - banner_len_no_color) // 2)
+             print(f"{banner_padding_str}{line}")
+        author_len = len(strip_colors(author_text))
+        version_len = len(strip_colors(version_text))
+        print(f"{' ' * max(0, (terminal_width - author_len)//2)}{author_text}")
+        print(f"{' ' * max(0, (terminal_width - version_len)//2)}{version_text}")
         print("\n")
 
-        # --- Menü Yapısı ve Boyutları ---
+        # --- Çift Sütun İçin Minimum Genişliği Hesapla ---
         items = list(tool_map.items())
-        num_rows = 13 # er.jpg'deki gibi 13 satır
+        num_rows = 13 # Çift sütun için 13 satır gerekir (25 araç için)
 
-        # Sütun genişlikleri (renksiz karaktere göre) - er.jpg'ye bakarak ayarlandı
-        col1_width_no_color = 26
-        col_spacing = 4
+        # Her sütundaki en uzun öğenin renksiz uzunluğunu bul
+        max_len_col1_no_color = 0
+        for i in range(num_rows): # Sol sütun (1-13)
+            key = str(i + 1)
+            if key in tool_map:
+                item_text_for_len = f"{key.rjust(2)}. {tool_map[key][0]}"
+                max_len_col1_no_color = max(max_len_col1_no_color, len(item_text_for_len))
 
-        # Çerçeve genişliği (içeriğe ve boşluklara göre)
-        # Sağ sütunun maksimum genişliğini de hesaba katalım (yaklaşık col1 kadar)
-        inner_content_width = col1_width_no_color + col_spacing + col1_width_no_color
-        # Çerçeve için eklenenler: 2*| + 2*iç boşluk = 4
-        # Toplam genişlik = iç + 4. er.jpg ~65 karakter genişliğinde görünüyor.
-        effective_frame_width = 65 # Sabit genişlik kullanalım
-        frame_char = "="
-        frame_line = f"\t{pest1}{frame_char * effective_frame_width}{coloursoff}"
-        # İçerik alanı: Çerçeve genişliği - 2 (kenar çizgileri) - 2 (iç boşluklar)
-        inner_width = effective_frame_width - 4
+        max_len_col2_no_color = 0
+        for i in range(num_rows): # Sağ sütun (14-25)
+            key = str(i + 1 + num_rows)
+            if key in tool_map:
+                item_text_for_len = f"{key.rjust(2)}. {tool_map[key][0]}"
+                max_len_col2_no_color = max(max_len_col2_no_color, len(item_text_for_len))
 
-        print(frame_line) # Üst çerçeve
+        col_spacing = 3 # Sütun arası boşluk (minimal)
+        required_inner_width = max_len_col1_no_color + col_spacing + max_len_col2_no_color
+        required_frame_width = required_inner_width + 4 # | Boşluk İçerik Boşluk |
 
-        for i in range(num_rows):
-            # --- Sol Sütun (1-13) ---
-            left_key = str(i + 1)
-            left_text_raw = ""
-            left_len_no_color = 0
-            if left_key in tool_map:
-                left_name = tool_map[left_key][0]
-                left_text_raw = f"{yellow1}{left_key.rjust(2)}{white1}.{pest1}{left_name}{coloursoff}"
-                left_len_no_color = len(strip_colors(left_text_raw))
-            # Sol sütun için padding hesapla
-            left_padding = ' ' * max(0, col1_width_no_color - left_len_no_color)
-            left_col_formatted = left_text_raw + left_padding
+        # --- Karar Ver: Çift Sütun mu, Tek Sütun mu? ---
+        if required_frame_width <= terminal_width:
+            # ---- EKRAN YETERİNCE GENİŞ: ÇİFT SÜTUNLU GÖSTER ----
+            print(f"{Y}[Bilgi] Ekran genişliği yeterli, çift sütunlu menü gösteriliyor.{RESET}")
+            time.sleep(0.5) # Kullanıcı görsün diye kısa bekleme
+            frame_char = "="
+            frame_line = f"{pest1}{frame_char * required_frame_width}{coloursoff}"
+            left_padding_str = " " * max(0, (terminal_width - required_frame_width) // 2)
 
-            # --- Sağ Sütun (14-26) ---
-            right_key = str(i + 1 + num_rows)
-            right_text_raw = ""
-            if right_key in tool_map: # Sadece 25'e kadar olanları gösterir
-                right_name = tool_map[right_key][0]
-                right_text_raw = f"{yellow1}{right_key.rjust(2)}{white1}.{pest1}{right_name}{coloursoff}"
-            # 26. anahtar tool_map'te olmayacağı için right_text_raw boş kalacak.
+            print(f"{left_padding_str}{frame_line}") # Üst çerçeve
 
-            # --- Satırı Birleştir ve Hizala ---
-            # Tüm satır içeriği (renkli)
-            line_content = f"{left_col_formatted}{' ' * col_spacing}{right_text_raw}"
-            # Renksiz uzunluğunu hesapla
-            line_len_no_color = len(strip_colors(line_content))
-            # Satırın sonuna eklenecek boşluğu hesapla (inner_width'a göre)
-            end_padding = ' ' * max(0, inner_width - line_len_no_color)
+            for i in range(num_rows):
+                # Sol Sütun
+                left_key = str(i + 1)
+                left_text_raw = "" ; left_len_no_color = 0
+                if left_key in tool_map:
+                    left_name = tool_map[left_key][0]
+                    left_text_raw = f"{yellow1}{left_key.rjust(2)}{white1}.{pest1}{left_name}{coloursoff}"
+                    left_len_no_color = len(strip_colors(left_text_raw))
+                left_padding = ' ' * max(0, max_len_col1_no_color - left_len_no_color)
+                left_col_formatted = left_text_raw + left_padding
 
-            # Satırı çerçeve içine yazdır
-            print(f"\t{pest1}| {line_content}{end_padding} {pest1}|{coloursoff}")
+                # Sağ Sütun
+                right_key = str(i + 1 + num_rows)
+                right_text_raw = "" ; right_len_no_color = 0
+                if right_key in tool_map:
+                    right_name = tool_map[right_key][0]
+                    right_text_raw = f"{yellow1}{right_key.rjust(2)}{white1}.{pest1}{right_name}{coloursoff}"
+                    # Sağ sütun için padding hesaplamaya gerek yok, satır sonu halleder
 
+                # Satırı Birleştir ve Hizala
+                line_content = f"{left_col_formatted}{' ' * col_spacing}{right_text_raw}"
+                line_len_no_color = len(strip_colors(line_content))
+                end_padding = ' ' * max(0, required_inner_width - line_len_no_color)
+                print(f"{left_padding_str}{pest1}| {line_content}{end_padding} {pest1}|{coloursoff}")
 
-        # --- Çıkış Seçeneği (er.jpg'deki 99 gibi sağa yaslı) ---
-        exit_num_str = exit_option.rjust(2)
-        exit_text_formatted = f"{yellow1}{exit_num_str}{white1}.{red1}{exit_text}{coloursoff}" # Sarı no, Beyaz nokta, Kırmızı metin
-        exit_len_no_color = len(strip_colors(exit_text_formatted))
-        # Sağa yaslamak için soluna boşluk ekle (inner_width'a göre)
-        exit_padding = ' ' * max(0, inner_width - exit_len_no_color)
-        print(f"\t{pest1}|{exit_padding}{exit_text_formatted} {pest1}|{coloursoff}")
+            # Çıkış Seçeneği
+            exit_num_str = exit_option.rjust(2)
+            exit_text_formatted = f"{yellow1}{exit_num_str}{white1}.{red1}{exit_text}{coloursoff}"
+            exit_len_no_color = len(strip_colors(exit_text_formatted))
+            exit_padding = ' ' * max(0, required_inner_width - exit_len_no_color)
+            print(f"{left_padding_str}{pest1}|{exit_padding}{exit_text_formatted} {pest1}|{coloursoff}")
 
-        # --- Alt Çerçeve ---
-        print(frame_line)
+            print(f"{left_padding_str}{frame_line}") # Alt çerçeve
 
-        # --- Prompt ---
+        else:
+            # ---- EKRAN DAR: TEK SÜTUNLU GÖSTER ----
+            print(f"{Y}[Bilgi] Ekran genişliği dar, tek sütunlu menü gösteriliyor.{RESET}")
+            time.sleep(0.5) # Kullanıcı görsün diye kısa bekleme
+            show_menu_single_column_centered(terminal_width) # Tek sütunlu fonksiyonu çağır
+
+        # --- Prompt (Her iki durumda da gösterilir) ---
         try:
-            choice = input(f"\n{rosy1}Enter Your Option: {coloursoff}") # Magenta prompt
+            prompt_text = f"{rosy1}Enter Your Option: {coloursoff}"
+            prompt_len = len("Enter Your Option: ")
+            prompt_padding_str = " " * max(0, (terminal_width - prompt_len) // 2)
+            choice = input(f"\n{prompt_padding_str}{prompt_text}")
             return choice.strip()
         except KeyboardInterrupt: sys.exit("\n\nÇıkış yapılıyor...")
         except Exception as e: print(f"\n{R}GİRİŞ HATASI: {e}{RESET}"); traceback.print_exc(); time.sleep(3); return None
 
     # --- Hata Yakalama ---
     except Exception as menu_err:
-        print(f"\n{R}{BRIGHT}KRİTİK show_menu HATASI:{RESET}\n{menu_err}"); traceback.print_exc()
+        print(f"\n{R}{BRIGHT}KRİTİK ADAPTİF MENÜ HATASI:{RESET}\n{menu_err}"); traceback.print_exc()
         print(f"{Y}Menü görüntülenemedi.{RESET}"); time.sleep(5); sys.exit(1)
 
 
 # ==================================================================
-# RUN_SCRIPT (Değişiklik Yok - Öncekiyle aynı)
+# RUN_SCRIPT (Değişiklik Yok)
 # ==================================================================
 def run_script(script_name):
     # Bu fonksiyon önceki cevapta olduğu gibi kalabilir.
-    # Hata yakalama, yasal uyarılar ve çalıştırma mantığı içerir.
     try:
         clear_screen()
 
@@ -264,7 +287,7 @@ if __name__ == "__main__":
         except ImportError: pass
 
         while True:
-            user_choice = show_menu_er_jpg_style_v3() # Güncellenmiş menü fonksiyonunu çağır
+            user_choice = show_adaptive_menu() # Adaptif menü fonksiyonunu çağır
 
             if user_choice is None: continue # Menüde hata olduysa döngüye devam et
 
@@ -275,4 +298,6 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt: print("\n\nProgram sonlandırılıyor...")
     except Exception as main_err: print(f"\n{R}{BRIGHT}KRİTİK HATA:{RESET}\n{main_err}"); traceback.print_exc(); input(f"{Y}Çıkmak için Enter...{RESET}")
-    finally: print(f"{B}Program sonlandı.{RESET}")
+    finally:
+        # colorama kullanılıyorsa deinit yapmak iyi olabilir, ama autoreset=True ile gerek yok gibi.
+        print(f"{RESET}Program sonlandı.") # Renkleri sıfırla
