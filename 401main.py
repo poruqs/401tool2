@@ -4,12 +4,11 @@ import os
 import sys
 import time
 import re
-import math
-import base64
-import codecs
-import traceback # Hata detayları için eklendi
+import base64 # Gerekli olabilir diye kalsın
+import codecs # Gerekli olabilir diye kalsın
+import traceback # Hata ayıklama için
 
-# --- Renk Tanımları (Colorama veya Manuel ANSI Kodları) ---
+# --- Renk Tanımları (Senin 401main.py dosyasından) ---
 try:
     from colorama import init, Fore, Style
     init(autoreset=True)
@@ -20,10 +19,11 @@ try:
     C = Fore.CYAN
     W = Fore.WHITE
     RESET = Style.RESET_ALL
-    pest1 = C
+    # Base64 kodundaki renk isimlerine karşılık gelenler
+    pest1 = C  # Menü çerçevesi için
     yellow1 = Y
     red1 = R
-    rosy1 = W
+    rosy1 = W  # Prompt için
     green1 = G
     coloursoff = RESET
 except ImportError:
@@ -44,7 +44,7 @@ except ImportError:
     coloursoff = RESET
 
 
-# --- Banner ---
+# --- Banner (Senin 401 ASCII Banner'ın) ---
 banner_padding = " " * 12
 banner_lines = [
     f"{C}{BRIGHT}██╗  ██╗ ██████╗  ██╗{RESET}",
@@ -54,133 +54,122 @@ banner_lines = [
     f"{C}{BRIGHT}     ██║╚██████╔╝ ██║{RESET}",
     f"{C}{BRIGHT}     ╚═╝ ╚═════╝  ╚═╝{RESET}"
 ]
+author_text = f"{G}{BRIGHT}by 401HackTeam{RESET}"
+version_text = f"{Y}Version: 1.1{RESET}"
 
-# --- Menü Öğeleri ---
-menu_items = {
-    '1': "Call Bomb", '2': "SMS Bomb", '3': "DoS Saldırısı", '4': "Yedek DDoS",
-    '5': "Base64 Decode", '6': "Chromecast Hack", '7': "Web Saldırı", '8': "Instagram Araçları",
-    '9': "Sosyal Medya Bulucu", '10': "Wi-Fi Jammer", '11': "DDoS Araçları", '12': "Ağ Tünelleme",
-    '13': "Bilgi Toplayıcı", '14': "Bruteforce Aracı", '15': "GPS Spoofer", '16': "Kamera Görüntüleme",
-    '17': "Log/Phishing/FakeAPK", '18': "Konum Takip", '19': "Özel Link Kısaltıcı", '20': "Pattern Kırıcı",
-    '21': "SIM Klonlayıcı", '22': "IP/Site Dönüştürücü", '23': "WiFi Şifre Kırıcı", '24': "WhatsApp Analiz",
-    '25': "Yedek Wi-Fi Jammer"
+# --- Menü Öğeleri (Senin güncel listen) ---
+# Araçları ve çalıştırılacak dosyaları eşleştiren bir sözlük
+tool_map = {
+    '1': ("Call Bomb", "call_bomb.py"),
+    '2': ("SMS Bomb", "sms_bomb.py"),
+    '3': ("DoS Saldırısı", "DoS.py"),
+    '4': ("Yedek DDoS", "Basit_ddos.py"),
+    '5': ("Base64 Decode", "base64decode.py"),
+    '6': ("Chromecast Hack", "choromecast_hack.py"),
+    '7': ("Web Saldırı", "web_saldırı.py"),
+    '8': ("Instagram Araçları", "insta_saldırı.py"),
+    '9': ("Sosyal Medya Bulucu", "sosyalmedya_bulma.py"),
+    '10': ("Wi-Fi Jammer", "wifi_jammer.py"),
+    '11': ("DDoS Araçları", "DDoS.py"),
+    '12': ("Ağ Tünelleme", "ag-tunelleme.py"),
+    '13': ("Bilgi Toplayıcı", "bilgitoplayıcı.py"),
+    '14': ("Bruteforce Aracı", "brutforce.py"),
+    '15': ("GPS Spoofer", "gps-spoofer.py"),
+    '16': ("Kamera Görüntüleme", "kamera_goruntuleme.py"),
+    '17': ("Log/Phishing/FakeAPK", "keylogger.py"),
+    '18': ("Konum Takip", "konum_takip.py"),
+    '19': ("Özel Link Kısaltıcı", "ozellink_kısaltıcı.py"),
+    '20': ("Pattern Kırıcı", "pattern-braker.py"),
+    '21': ("SIM Klonlayıcı", "sim-clone.py"),
+    '22': ("IP/Site Dönüştürücü", "webip_tool.py"),
+    '23': ("WiFi Şifre Kırıcı", "wifipass_breaker.py"),
+    '24': ("WhatsApp Analiz", "wp-analizer.py"),
+    '25': ("Yedek Wi-Fi Jammer", "yedek_jammer.py")
 }
+# Çıkış seçeneği
+exit_option = '0'
+exit_text = "Çıkış"
 
 # --- Yardımcı Fonksiyonlar ---
-def strip_colors(s):
-    try:
-        return re.sub(r'\x1b\[[0-9;]*[mK]', '', str(s))
-    except Exception as e:
-        print(f"{R}strip_colors HATA: {e}{RESET}") # Hata olursa bildir
-        return str(s) # Hata durumunda orijinal string'i döndür
-
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 # ==================================================================
-# SHOW_MENU (Hata Yakalama Eklenmiş)
+# SHOW_MENU (Base64 yapısına benzer, büyük input metni ile)
 # ==================================================================
-def show_menu():
+def show_menu_and_get_input():
+    """Menüyü gösterir ve kullanıcıdan girdi alır."""
+    clear_screen()
+
+    # Banner ve alt bilgileri yazdır
+    print()
+    for line in banner_lines:
+        print(f"{banner_padding}{line}")
+    sub_padding = banner_padding + "   "
+    print(f"{sub_padding}{author_text}")
+    print(f"{sub_padding}{version_text}")
+    print()
+
+    # Menü metnini dinamik olarak oluştur
+    # Base64'teki yapıya benzetmeye çalışalım (13 satır, 2 sütun)
+    menu_lines = []
+    items = list(tool_map.items())
+    num_items = len(items)
+    num_rows = 13 # Sabit 13 satır (25/2 ~ 13)
+
+    for i in range(num_rows):
+        # Sol Sütun
+        left_key = str(i + 1)
+        left_text = ""
+        if left_key in tool_map:
+            left_name = tool_map[left_key][0]
+            left_text = f"{W}{left_key.rjust(2)}.{C} {left_name}{RESET}"
+        # Sütun genişliğini ayarlamak için renksiz uzunluğu alıp boşluk ekleyebiliriz,
+        # ama base64 stili daha çok hizalamaya dayanıyor gibiydi. Şimdilik basit tutalım.
+        # Sol sütun için sabit bir genişlik (örneğin 30 karakter) belirleyelim
+        left_text_len = len(re.sub(r'\x1b\[[0-9;]*[mK]', '', left_text))
+        left_padding = ' ' * max(0, 30 - left_text_len)
+        left_col = left_text + left_padding
+
+        # Sağ Sütun
+        right_key = str(i + 1 + num_rows) # 14, 15, ..., 26
+        right_text = ""
+        if right_key in tool_map:
+            right_name = tool_map[right_key][0]
+            right_text = f"{W}{right_key.rjust(2)}.{C} {right_name}{RESET}"
+        # Sağ sütun için de padding eklenebilir ama gerek yok gibi.
+
+        menu_lines.append(f"\t{pest1}|{coloursoff} {left_col}{pest1}|{coloursoff} {right_text}")
+
+    # Çıkış seçeneğini ekle (Base64'teki gibi ayrı bir satırda)
+    exit_line = f"\t{pest1}|{coloursoff} {W}{exit_option.rjust(2)}.{R} {exit_text}{RESET}"
+
+    # Tüm menü metnini birleştir
+    menu_string = "\n".join([
+        f"\t{pest1}============================================================={coloursoff}", # Üst Çerçeve
+        *menu_lines, # Araç Satırları
+        # Base64'teki gibi bir boşluk satırı ekleyelim
+        f"\t{pest1}|{coloursoff} {' ' * 58}{pest1}|{coloursoff}",
+        exit_line.ljust(60 + len(pest1)*2 + len(coloursoff)*2) + f"{pest1}|{coloursoff}", # Çıkış Satırı (Hizalama için ljust)
+        f"\t{pest1}============================================================={coloursoff}", # Alt Çerçeve
+        f"\n{rosy1}Enter Your Option: {coloursoff}" # Prompt
+    ])
+
+    # Menüyü göster ve input al
     try:
-        clear_screen()
-
-        # --- Banner ve Alt Başlıkları Yazdır ---
-        print()
-        for line in banner_lines:
-            print(f"{banner_padding}{line}")
-        sub_padding = banner_padding + "   "
-        print(f"{sub_padding}{G}{BRIGHT}by 401HackTeam{RESET}")
-        print(f"{sub_padding}{Y}Version: 1.1{RESET}")
-        print()
-
-        # --- Menü Çerçevesi ve İçerik ---
-        menu_width = 74
-        col1_max_len = 26
-        col_spacing = 4
-        inner_padding = 1
-        inner_width = menu_width - (inner_padding * 2) - 2
-
-        print(f"{pest1}{'-' * menu_width}{coloursoff}") # Üst Çizgi
-
-        num_items = len(menu_items)
-        num_rows = math.ceil(num_items / 2)
-
-        for i in range(num_rows):
-            try: # Satır oluşturma işlemini dene
-                idx1 = i + 1
-                key1 = str(idx1)
-                item1_text = ""
-                item1_len_no_color = 0 # Renksiz uzunluğu sakla
-                if key1 in menu_items:
-                    item1_raw = f"{W}{key1.rjust(2)}.{C} {menu_items[key1]}{RESET}"
-                    item1_len_no_color = len(strip_colors(item1_raw))
-                    item1_text = item1_raw + ' ' * max(0, col1_max_len - item1_len_no_color)
-                else:
-                    item1_text = ' ' * col1_max_len
-                    item1_len_no_color = col1_max_len
-
-                idx2 = i + 1 + num_rows
-                key2 = str(idx2)
-                item2_text = ""
-                item2_len_no_color = 0 # Renksiz uzunluğu sakla
-                if key2 in menu_items:
-                    item2_raw = f"{W}{key2.rjust(2)}.{C} {menu_items[key2]}{RESET}"
-                    item2_len_no_color = len(strip_colors(item2_raw))
-                    item2_text = item2_raw
-                # else: İkinci sütun boşsa uzunluk 0'dır
-
-                # Toplam satır içeriği (renkli)
-                line_content_raw = f"{item1_text}{' ' * col_spacing}{item2_text}"
-                # Toplam satır içeriği (renksiz) - Doğru hesaplama önemli
-                line_len_no_color = item1_len_no_color + col_spacing + item2_len_no_color
-                final_padding = ' ' * max(0, inner_width - line_len_no_color)
-
-                # Satırı yazdır
-                print(f"{pest1}|{coloursoff}{' ' * inner_padding}{line_content_raw}{final_padding}{' ' * inner_padding}{pest1}|{coloursoff}")
-
-            except Exception as row_err:
-                print(f"\n{R}HATA: Menü satırı oluşturulamadı (Satır {i}): {row_err}{RESET}")
-                traceback.print_exc() # Detaylı hatayı yazdır
-                # Hata durumunda menü gösterimini durdurabilir veya devam edebiliriz.
-                # Şimdilik devam edelim ki diğer satırlar görünsün.
-
-        # --- Ayırıcı ve Çıkış ---
-        print(f"{pest1}{'-' * menu_width}{coloursoff}")
-
-        try: # Çıkış satırını oluşturma ve yazdırma
-            exit_text = f"{W} 0. {R}Çıkış{RESET}"
-            exit_len_no_color = len(strip_colors(exit_text))
-            exit_padding = ' ' * max(0, inner_width - exit_len_no_color)
-            print(f"{pest1}|{coloursoff}{' ' * inner_padding}{exit_text}{exit_padding}{' ' * inner_padding}{pest1}|{coloursoff}")
-        except Exception as exit_err:
-            print(f"\n{R}HATA: Çıkış satırı oluşturulamadı: {exit_err}{RESET}")
-            traceback.print_exc()
-
-        print(f"{pest1}{'-' * menu_width}{coloursoff}") # Alt Çizgi
-
-        # --- Prompt ---
-        try:
-            choice = input(f"\n{rosy1}Enter Your Option: {coloursoff}")
-            return choice
-        except KeyboardInterrupt:
-            print("\n\nÇıkış yapılıyor...")
-            sys.exit()
-        except Exception as e:
-            print(f"\n{R}GİRİŞ HATASI ({type(e).__name__}):{RESET} {e}")
-            traceback.print_exc() # Detaylı hatayı yazdır
-            time.sleep(3)
-            return None # Hata durumunda None döndür
-
-    except Exception as menu_err:
-        print(f"\n{R}{BRIGHT}KRİTİK show_menu HATASI:{RESET}")
-        print(f"{R}Hata: {menu_err}{RESET}")
-        traceback.print_exc() # Detaylı hata izini yazdır
-        print(f"{Y}Menü görüntülenemedi. Program sonlandırılacak.{RESET}")
-        time.sleep(5)
-        sys.exit(1) # Hata ile çık
+        choice = input(menu_string)
+        return choice.strip()
+    except KeyboardInterrupt:
+        print("\n\nÇıkış yapılıyor...")
+        sys.exit()
+    except Exception as e:
+        print(f"\n{R}GİRİŞ HATASI ({type(e).__name__}):{RESET} {e}")
+        traceback.print_exc()
+        time.sleep(3)
+        return None
 
 # ==================================================================
-# RUN_SCRIPT (Hata Yakalama ve Detaylandırma ile)
+# RUN_SCRIPT (Senin 401main.py dosyasından, Hata Yakalama ile)
 # ==================================================================
 def run_script(script_name):
     try: # run_script fonksiyonu için genel hata yakalama
@@ -210,7 +199,6 @@ def run_script(script_name):
         requires_root = False
 
         # --- YASAL UYARILAR ve ÖN KONTROLLER ---
-        # (Bu kısım öncekiyle aynı kalabilir)
         if script_name == "netflix_checker.py":
              print(f"{R}{BRIGHT}UYARI:{Y} Netflix Checker kullanım dışıdır.{RESET}"); time.sleep(3); script_cancelled = True
         elif script_name in ["call_bomb.py", "sms_bomb.py"]:
@@ -242,51 +230,36 @@ def run_script(script_name):
                 python_executable = sys.executable
                 command = []
                 if requires_root and os.name != 'nt':
-                     try:
-                         is_root = (os.geteuid() == 0)
-                     except AttributeError:
-                         is_root = False
+                     try: is_root = (os.geteuid() == 0)
+                     except AttributeError: is_root = False
                      if not is_root:
                          print(f"{Y}Root yetkisi gerekiyor, 'sudo' kullanılıyor...{RESET}")
                          command.append("sudo")
                 command.extend([python_executable, script_path])
 
                 print(f"{G}Komut çalıştırılıyor: {' '.join(command)}{RESET}")
-                # Betiği çalıştır ve çıktısını anlık olarak göster
-                process = subprocess.Popen(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                # Betiği çalıştır (Popen yerine run kullanmak daha basit olabilir)
+                process = subprocess.run(command, check=False, text=True)
 
-                # Alt sürecin çıktısını anlık olarak oku ve yazdır
-                while True:
-                    output = process.stdout.readline()
-                    if output == '' and process.poll() is not None:
-                        break
-                    if output:
-                        print(output.strip()) # Satır sonu karakterlerini temizle
-
-                # Sürecin bitmesini bekle ve dönüş kodunu al
-                return_code = process.poll()
-
-                if return_code != 0:
-                     print(f"{Y}Uyarı: '{script_name}' betiği {return_code} çıkış kodu ile bitti.{RESET}")
+                if process.returncode != 0:
+                     print(f"{Y}Uyarı: '{script_name}' betiği {process.returncode} çıkış kodu ile bitti.{RESET}")
 
             except FileNotFoundError:
                  print(f"{R}{BRIGHT}HATA: '{python_executable}' veya 'sudo' komutu bulunamadı.{RESET}")
-                 print(f"{Y}Python'un ve (gerekiyorsa) sudo'nun sistem PATH'inde olduğundan emin olun.{RESET}")
-                 traceback.print_exc() # Hata detayını yazdır
+                 traceback.print_exc()
             except PermissionError:
                  print(f"{R}{BRIGHT}HATA: '{script_name}' betiğini çalıştırma izni yok.{RESET}")
-                 print(f"{Y}'chmod +x {script_name}' komutunu deneyebilirsiniz (gerekliyse).{RESET}")
-                 traceback.print_exc() # Hata detayını yazdır
+                 traceback.print_exc()
             except Exception as e:
                  print(f"\n{R}{BRIGHT}Betik çalıştırılırken hata oluştu ('{script_name}'):{RESET}\n{e}")
-                 traceback.print_exc() # Hata detayını yazdır
+                 traceback.print_exc()
 
     except Exception as outer_run_err:
         print(f"\n{R}{BRIGHT}KRİTİK run_script HATASI:{RESET}")
         print(f"{R}Hata: {outer_run_err}{RESET}")
-        traceback.print_exc() # Hata detayını yazdır
+        traceback.print_exc()
 
-    # Ana menüye dönmek için bekle (her durumda)
+    # Ana menüye dönmek için bekle
     print(f"\n{Y}Ana menüye dönmek için Enter tuşuna basın...{RESET}")
     try:
         input()
@@ -303,68 +276,34 @@ if __name__ == "__main__":
         except ImportError: pass
 
         while True:
-            user_choice = None
-            try:
-                user_choice = show_menu()
+            user_choice = show_menu_and_get_input() # Yeni menü fonksiyonunu çağır
 
-                if user_choice is None:
-                    print(f"{Y}Menü hatası nedeniyle devam edilemiyor. Tekrar deneniyor...{RESET}")
-                    time.sleep(2)
-                    continue
+            if user_choice is None:
+                print(f"{Y}Giriş alınamadı veya menü hatası. Tekrar deneniyor...{RESET}")
+                time.sleep(2)
+                continue
 
-                # --- Script Eşleştirme (Öncekiyle Aynı) ---
-                script_to_run = None
-                if user_choice == '1': script_to_run = "call_bomb.py"
-                elif user_choice == '2': script_to_run = "sms_bomb.py"
-                elif user_choice == '3': script_to_run = "DoS.py"
-                elif user_choice == '4': script_to_run = "Basit_ddos.py"
-                elif user_choice == '5': script_to_run = "base64decode.py"
-                elif user_choice == '6': script_to_run = "choromecast_hack.py"
-                elif user_choice == '7': script_to_run = "web_saldırı.py"
-                elif user_choice == '8': script_to_run = "insta_saldırı.py"
-                elif user_choice == '9': script_to_run = "sosyalmedya_bulma.py"
-                elif user_choice == '10': script_to_run = "wifi_jammer.py"
-                elif user_choice == '11': script_to_run = "DDoS.py"
-                elif user_choice == '12': script_to_run = "ag-tunelleme.py"
-                elif user_choice == '13': script_to_run = "bilgitoplayıcı.py"
-                elif user_choice == '14': script_to_run = "brutforce.py"
-                elif user_choice == '15': script_to_run = "gps-spoofer.py"
-                elif user_choice == '16': script_to_run = "kamera_goruntuleme.py"
-                elif user_choice == '17': script_to_run = "keylogger.py"
-                elif user_choice == '18': script_to_run = "konum_takip.py"
-                elif user_choice == '19': script_to_run = "ozellink_kısaltıcı.py"
-                elif user_choice == '20': script_to_run = "pattern-braker.py"
-                elif user_choice == '21': script_to_run = "sim-clone.py"
-                elif user_choice == '22': script_to_run = "webip_tool.py"
-                elif user_choice == '23': script_to_run = "wifipass_breaker.py"
-                elif user_choice == '24': script_to_run = "wp-analizer.py"
-                elif user_choice == '25': script_to_run = "yedek_jammer.py"
-                elif user_choice == '0':
-                    clear_screen()
-                    print(f"\n{R}{BRIGHT}╔═══════════════════════════════════╗")
-                    print(f"║    {Y}401HackTeam Tool Kapatılıyor...{R}    ║")
-                    print(f"╚═══════════════════════════════════╝{RESET}\n")
-                    time.sleep(1)
-                    break
-                else:
-                    print(f"\n{R}{BRIGHT}Geçersiz seçim! Lütfen listeden bir numara girin.{RESET}")
-                    time.sleep(1.5)
-                    continue
+            # Seçimi işle
+            if user_choice == exit_option: # Çıkış ('0')
+                clear_screen()
+                print(f"\n{R}{BRIGHT}╔═══════════════════════════════════╗")
+                print(f"║    {Y}401HackTeam Tool Kapatılıyor...{R}    ║")
+                print(f"╚═══════════════════════════════════╝{RESET}\n")
+                time.sleep(1)
+                break # Döngüden çık
+            elif user_choice in tool_map:
+                tool_name, script_file = tool_map[user_choice]
+                run_script(script_file)
+            else:
+                print(f"\n{R}{BRIGHT}Geçersiz seçim! Lütfen listeden bir numara girin.{RESET}")
+                time.sleep(1.5)
+                # continue demeye gerek yok, döngü zaten devam edecek
 
-                if script_to_run:
-                     run_script(script_to_run)
-
-            except KeyboardInterrupt:
-                print("\n\nÇıkış yapılıyor...")
-                break
-            except Exception as loop_err:
-                print(f"\n{R}{BRIGHT}ANA DÖNGÜ HATASI ({type(loop_err).__name__}):{RESET} {loop_err}")
-                traceback.print_exc() # Detaylı hata izini yazdır
-                input(f"{Y}Devam etmek için Enter'a basın...{RESET}")
-
+    except KeyboardInterrupt: # Ana döngüde Ctrl+C yakala
+        print("\n\nProgram sonlandırılıyor...")
     except Exception as main_err:
         print(f"\n{R}{BRIGHT}KRİTİK PROGRAM HATASI ({type(main_err).__name__}):{RESET} {main_err}")
-        traceback.print_exc() # Detaylı hata izini yazdır
+        traceback.print_exc()
         input(f"{Y}Çıkmak için Enter'a basın...{RESET}")
 
     finally:
